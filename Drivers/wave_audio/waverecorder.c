@@ -408,38 +408,3 @@ static uint32_t WavProcess_HeaderUpdate(uint8_t* pHeader, WAVE_FormatTypeDef* pW
 }
 
 
-/**
-  * @brief  Display interface touch screen buttons
-  * @param  None
-  * @retval None
-  */
-//static void AUDIO_REC_DisplayButtons(void)
-//{
-//  BSP_LCD_SetFont(&LCD_LOG_HEADER_FONT);
-//  BSP_LCD_ClearStringLine(13);            /* Clear dedicated zone */
-//  BSP_LCD_ClearStringLine(14);
-//  BSP_LCD_ClearStringLine(15);
-//
-//  BSP_LCD_SetTextColor(LCD_COLOR_CYAN);
-//  BSP_LCD_FillCircle((TOUCH_RECORD_XMAX+TOUCH_RECORD_XMIN)/2, /* Record circle */
-//                     (TOUCH_RECORD_YMAX+TOUCH_RECORD_YMIN)/2,
-//                     (TOUCH_RECORD_XMAX-TOUCH_RECORD_XMIN)/2);
-//  BSP_LCD_FillRect(TOUCH_PAUSE_XMIN, TOUCH_PAUSE_YMIN , 15, TOUCH_PAUSE_YMAX - TOUCH_PAUSE_YMIN);    /* Pause rectangles */
-//  BSP_LCD_FillRect(TOUCH_PAUSE_XMIN + 20, TOUCH_PAUSE_YMIN, 15, TOUCH_PAUSE_YMAX - TOUCH_PAUSE_YMIN);
-//  BSP_LCD_FillRect(TOUCH_STOP_XMIN, TOUCH_STOP_YMIN , /* Stop rectangle */
-//                   TOUCH_STOP_XMAX - TOUCH_STOP_XMIN,
-//                   TOUCH_STOP_YMAX - TOUCH_STOP_YMIN);
-//  BSP_LCD_DrawRect(TOUCH_VOL_MINUS_XMIN, TOUCH_VOL_MINUS_YMIN , /* VOl- rectangle */
-//                   TOUCH_VOL_MINUS_XMAX - TOUCH_VOL_MINUS_XMIN,
-//                   TOUCH_VOL_MINUS_YMAX - TOUCH_VOL_MINUS_YMIN);
-//  BSP_LCD_DisplayStringAt(24, LINE(14), (uint8_t *)"VOl-", LEFT_MODE);
-//  BSP_LCD_DrawRect(TOUCH_VOL_PLUS_XMIN, TOUCH_VOL_PLUS_YMIN , /* VOl+ rectangle */
-//                   TOUCH_VOL_PLUS_XMAX - TOUCH_VOL_PLUS_XMIN,
-//                   TOUCH_VOL_PLUS_YMAX - TOUCH_VOL_PLUS_YMIN);
-//  BSP_LCD_DisplayStringAt(24, LINE(14), (uint8_t *)"VOl+", RIGHT_MODE);
-//  BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
-//  BSP_LCD_SetFont(&LCD_LOG_TEXT_FONT);
-//  BSP_LCD_DisplayStringAtLine(15, (uint8_t *)"Use record button to start record, stop to exit");
-//  BSP_LCD_SetTextColor(LCD_COLOR_CYAN);
-//}
-

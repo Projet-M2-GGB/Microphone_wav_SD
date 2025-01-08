@@ -33,6 +33,21 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+typedef struct {
+    char ChunkID[4];
+    uint32_t ChunkSize;
+    char Format[4];
+    char Subchunk1ID[4];
+    uint32_t Subchunk1Size;
+    uint16_t AudioFormat;
+    uint16_t NumChannels;
+    uint32_t SampleRate;
+    uint32_t ByteRate;
+    uint16_t BlockAlign;
+    uint16_t BitsPerSample;
+    char Subchunk2ID[4];
+    uint32_t Subchunk2Size;
+} WAV_Header;
 
 /* USER CODE END PTD */
 
@@ -57,11 +72,13 @@ AUDIO_ErrorTypeDef  status;
 
 /* SD card RELATED VARIABLES */
 #define WORK_BUFFER_SIZE 512
-//FATFS SDFatFS;   // File system object for SD card
-//char SDPath[4];  // Logical drive path
 BYTE workBuffer_init[WORK_BUFFER_SIZE];
-
-
+uint32_t bytesread;
+extern FIL WavFile;
+static AUDIO_OUT_BufferTypeDef BufferCtl;
+FRESULT res;
+UINT bytesRead;
+WAV_Header header;
 
 /* USER CODE END PV */
 
@@ -90,6 +107,7 @@ void new_log(FIL *fp, const char *filename, const char *content);
 /* Needed to create a folder in the SD Card */
 void new_folder(const char *foldername);
 
+void ReadWAVFileInfo(const char *filename);
 
 
 /* USER CODE END PFP */
@@ -138,7 +156,6 @@ int main(void)
   /* We format the SD card */
   printf("SD card init...\r\n");
   SDCard_InitAndFormat();
-  printf("SD card correctly initialized\r\n");
 
   /* USER CODE END 2 */
 
@@ -182,7 +199,11 @@ int main(void)
 			status = AUDIO_REC_Process();
 		    printf("Recording stopped.\r\n");
 		  }
+
+		  ReadWAVFileInfo("WAVE.wav");
 	  }
+
+
 
   }
   /* USER CODE END 3 */
@@ -307,7 +328,6 @@ void SDCard_InitAndFormat(void) {
 
     printf("SD card initialized and formatted successfully.\r\n");
 }
-
 /* ======================================================== */
 
 
@@ -346,6 +366,47 @@ void new_folder(const char *foldername){
 	{
 		printf("Folder created!\r\n");
 	}
+}
+/* ======================================================== */
+
+
+/* Debug function : reads the characteristics of a .wav file in the SD card */
+void ReadWAVFileInfo(const char *filename) {
+    FIL file;               // File object
+    WAV_Header header;      // WAV file header
+    UINT bytesRead;         // Number of bytes read
+    FRESULT res;
+
+    // Open the WAV file
+    res = f_open(&file, filename, FA_READ);
+    if (res != FR_OK) {
+        printf("Error: Failed to open file '%s' (Code: %d).\n", filename, res);
+        return;
+    }
+
+    // Read the WAV file header
+    res = f_read(&file, &header, sizeof(WAV_Header), &bytesRead);
+    if (res != FR_OK || bytesRead != sizeof(WAV_Header)) {
+        printf("Error: Failed to read WAV file header (Code: %d).\n", res);
+        f_close(&file);
+        return;
+    }
+
+    // Print WAV file information
+    printf("WAV File Info:\r\n");
+    printf("  ChunkID: %.4s\r\n", header.ChunkID);
+    printf("  Format: %.4s\r\n", header.Format);
+    printf("  Audio Format: %d\r\n", header.AudioFormat);
+    printf("  Number of Channels: %d\r\n", header.NumChannels);
+    printf("  Sample Rate: %d Hz\r\n", header.SampleRate);
+    printf("  Byte Rate: %d\r\n", header.ByteRate);
+    printf("  Block Align: %d\r\n", header.BlockAlign);
+    printf("  Bits Per Sample: %d\r\n", header.BitsPerSample);
+    printf("  Subchunk2ID: %.4s\r\n", header.Subchunk2ID);
+    printf("  Subchunk2Size: %d bytes\r\n", header.Subchunk2Size);
+
+    // Close the file
+    f_close(&file);
 }
 /* ======================================================== */
 
