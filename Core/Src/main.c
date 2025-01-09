@@ -24,11 +24,11 @@
 #include "sdmmc.h"
 #include "usart.h"
 #include "gpio.h"
-#include "waverecorder.h"
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "waverecorder.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
