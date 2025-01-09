@@ -39,7 +39,10 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Middlewares/Third_Party/FatFs/src/ff.h ../FATFS/Target/sd_diskio.h \
  ../Core/Inc/sai.h ../Core/Inc/sdmmc.h ../Core/Inc/usart.h \
  ../Core/Inc/gpio.h \
- C:/Users/fabi_/Documents/STM32_Projects/Microphone_wav_SD/Drivers/wave_audio/waverecorder.h
+ C:/Users/fabi_/Documents/STM32_Projects/Microphone_wav_SD/Drivers/wave_audio/waverecorder.h \
+ ../Middlewares/ST/AI/Inc/ai_platform.h ../X-CUBE-AI/App/network.h \
+ ../X-CUBE-AI/App/network_config.h ../X-CUBE-AI/App/network_data.h \
+ ../X-CUBE-AI/App/network_data_params.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h:
 ../Core/Inc/stm32f7xx_hal_conf.h:
@@ -89,3 +92,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/usart.h:
 ../Core/Inc/gpio.h:
 C:/Users/fabi_/Documents/STM32_Projects/Microphone_wav_SD/Drivers/wave_audio/waverecorder.h:
+../Middlewares/ST/AI/Inc/ai_platform.h:
+../X-CUBE-AI/App/network.h:
+../X-CUBE-AI/App/network_config.h:
+../X-CUBE-AI/App/network_data.h:
+../X-CUBE-AI/App/network_data_params.h:

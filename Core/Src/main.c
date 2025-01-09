@@ -24,10 +24,14 @@
 #include "sdmmc.h"
 #include "usart.h"
 #include "gpio.h"
-
+//
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "waverecorder.h"
+#include <stdio.h>
+#include "ai_platform.h"
+#include "network.h"
+#include "network_data.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -77,6 +81,17 @@ static AUDIO_OUT_BufferTypeDef BufferCtl;
 FRESULT res;
 UINT bytesRead;
 WAV_Header header;
+
+/* AI model RELATED VARIABLES */
+ai_handle network;
+float aiInData[AI_NETWORK_IN_1_SIZE];
+float aiOutData[AI_NETWORK_OUT_1_SIZE];
+ai_u8 activations[AI_NETWORK_DATA_ACTIVATIONS_SIZE];
+const char* activities[AI_NETWORK_OUT_1_SIZE] = {
+  "down", "go", "left", "right", "stop", "up"
+};
+ai_buffer * ai_input;
+ai_buffer * ai_output;
 
 /* USER CODE END PV */
 
