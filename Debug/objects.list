@@ -61,3 +61,6 @@
 "./Middlewares/Third_Party/FatFs/src/ff.o"
 "./Middlewares/Third_Party/FatFs/src/ff_gen_drv.o"
 "./Middlewares/Third_Party/FatFs/src/option/syscall.o"
+"./X-CUBE-AI/App/network.o"
+"./X-CUBE-AI/App/network_data.o"
+"./X-CUBE-AI/App/network_data_params.o"

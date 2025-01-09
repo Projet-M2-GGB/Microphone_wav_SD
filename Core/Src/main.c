@@ -24,16 +24,15 @@
 #include "sdmmc.h"
 #include "usart.h"
 #include "gpio.h"
-#include "waverecorder.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "waverecorder.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef struct {
+typedef struct __attribute__((packed)) {
     char ChunkID[4];
     uint32_t ChunkSize;
     char Format[4];
@@ -73,7 +72,6 @@ AUDIO_ErrorTypeDef  status;
 /* SD card RELATED VARIABLES */
 #define WORK_BUFFER_SIZE 512
 BYTE workBuffer_init[WORK_BUFFER_SIZE];
-uint32_t bytesread;
 extern FIL WavFile;
 static AUDIO_OUT_BufferTypeDef BufferCtl;
 FRESULT res;
@@ -127,6 +125,14 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
+
+  /* Enable the CPU Cache */
+
+  /* Enable I-Cache---------------------------------------------------------*/
+  SCB_EnableICache();
+
+  /* Enable D-Cache---------------------------------------------------------*/
+  SCB_EnableDCache();
 
   /* MCU Configuration--------------------------------------------------------*/
 
