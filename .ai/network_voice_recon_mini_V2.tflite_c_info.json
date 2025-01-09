@@ -472,35 +472,35 @@
   "environment": {
     "device": null,
     "generated_model": {
-      "generated_time": "2025-01-09T10:38:02+0100",
+      "generated_time": "2025-01-09T11:04:21+0100",
       "model_files": [
         {
           "name": "network_data_params.h",
-          "signature": "0x9a81733a84f2c8353f945be647379970"
+          "signature": "0xbc06724b2ad923568d394d9ce9c52d59"
         },
         {
           "name": "network_data_params.c",
-          "signature": "0xf014879083e474c15fd36a6f2a5bab94"
+          "signature": "0x81f460380c2fc16675d374c67021942c"
         },
         {
           "name": "network_data.h",
-          "signature": "0x7c576288c93c1f53d40ac512c17eeaaf"
+          "signature": "0x70ef9eb4a2734c2fb739dcedca57ace3"
         },
         {
           "name": "network_data.c",
-          "signature": "0x5ca1e6d8058754e36c3fb0b914f1e00a"
+          "signature": "0x1b1415c38de191396adcab3b4266afe8"
         },
         {
           "name": "network_config.h",
-          "signature": "0x6991a6105d7e5f4b7362392f633f28b4"
+          "signature": "0xc248714cbd2a25c36cc194153844cab5"
         },
         {
           "name": "network.h",
-          "signature": "0xf7063087a4c20f2f1753a905318e514d"
+          "signature": "0x7a1a29d890ffa2271186a4a9b06080dd"
         },
         {
           "name": "network.c",
-          "signature": "0x36a2e798bd45709bae25384a43ef3a71"
+          "signature": "0xd8f54d3b52e6339fc3e0cbf9e54df802"
         }
       ],
       "n_params": null,
@@ -508,11 +508,11 @@
       "size": null,
       "type": null
     },
-    "network_signature": "0x7b231bbf8c8d3605",
+    "network_signature": "0x74d968ed790aab97",
     "test_name": "",
     "tools": [
       {
-        "arguments": "generate --target stm32f7 --name network -m C:/Users/fabi_/OneDrive/Documentos/2_M2_oca/Projet/voice_recon_mini_V2.tflite --compression none --verbosity 1 --allocate-inputs --allocate-outputs --workspace C:/Users/fabi_/AppData/Local/Temp/mxAI_workspace20469247758190003286600146259327048 --output C:/Users/fabi_/.stm32cubemx/network_output",
+        "arguments": "generate --target stm32f7 --name network -m C:/Users/fabi_/OneDrive/Documentos/2_M2_oca/Projet/voice_recon_mini_V2.tflite --compression none --verbosity 1 --allocate-inputs --allocate-outputs --workspace C:/Users/fabi_/AppData/Local/Temp/mxAI_workspace20484996077421001563356528093598975 --output C:/Users/fabi_/.stm32cubemx/network_output",
         "environment": [
           "STATS_TYPE=X-CUBE-AI"
         ],
