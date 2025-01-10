@@ -129,6 +129,7 @@ void new_log(FIL *fp, const char *filename, const char *content);
 void new_folder(const char *foldername);
 
 void ReadWAVFileInfo(const char *filename);
+void ReadWAVFileInfo_fromSD(const char *filename);
 
 void AI_Init(void);
 int AI_Process(const float* input_data);
@@ -278,7 +279,7 @@ int main(void)
 
   /* We format the SD card */
   printf("SD card init...\r\n");
-  SDCard_InitAndFormat();
+  //SDCard_InitAndFormat();
 
   AI_Init();
 
@@ -321,25 +322,27 @@ int main(void)
               printf("Recording stopped.\r\n");
           }
 
-          // Process the WAV file for AI inference
-          if (status == 0)  // Ensure the WAV file was properly processed
-          {
-              int ret = preprocess_wav_data(in_data);
-              if (ret == 0)  // Check if preprocessing was successful
-              {
-                  // Run inference on the preprocessed data
-                  int activity_index = AI_Process(in_data);
-                  printf("Predicted activity: %s\r\n", activities[activity_index]);
-              }
-              else
-              {
-                  printf("Error: WAV file preprocessing failed.\r\n");
-              }
-          }
-          else
-          {
-              printf("Error: WAV file info reading failed.\r\n");
-          }
+          ReadWAVFileInfo("WAVE.wav");
+
+//          // Process the WAV file for AI inference
+//          if (status == 0)  // Ensure the WAV file was properly processed
+//          {
+//              int ret = preprocess_wav_data(in_data);
+//              if (ret == 0)  // Check if preprocessing was successful
+//              {
+//                  // Run inference on the preprocessed data
+//                  int activity_index = AI_Process(in_data);
+//                  printf("Predicted activity: %s\r\n", activities[activity_index]);
+//              }
+//              else
+//              {
+//                  printf("Error: WAV file preprocessing failed.\r\n");
+//              }
+//          }
+//          else
+//          {
+//              printf("Error: WAV file info reading failed.\r\n");
+//          }
       }
 
       HAL_Delay(100);  // Small delay for stability
@@ -502,6 +505,53 @@ void new_folder(const char *foldername){
 	{
 		printf("Folder created!\r\n");
 	}
+}
+/* ======================================================== */
+
+
+/* Debug function : reads the characteristics of a .wav file in the SD card */
+void ReadWAVFileInfo_fromSD(const char *filename) {
+    FIL file;               // File object
+    WAV_Header header;      // WAV file header
+    UINT bytesRead;         // Number of bytes read
+    FRESULT res;
+
+    res = f_mount(&SDFatFS, (TCHAR const *)SDPath, 0);
+    if (res != FR_OK) {
+        printf("Error: Failed to mount SD card (Code: %d).\r\n", res);
+        Error_Handler();
+    }
+
+    // Open the WAV file
+    res = f_open(&file, filename, FA_READ);
+    if (res != FR_OK) {
+        printf("Error: Failed to open file '%s' (Code: %d).\n", filename, res);
+        return;
+    }
+
+    // Read the WAV file header
+    res = f_read(&file, &header, sizeof(WAV_Header), &bytesRead);
+    if (res != FR_OK || bytesRead != sizeof(WAV_Header)) {
+        printf("Error: Failed to read WAV file header (Code: %d).\n", res);
+        f_close(&file);
+        return;
+    }
+
+    // Print WAV file information
+    printf("WAV File Info:\r\n");
+    printf("  ChunkID: %.4s\r\n", header.ChunkID);
+    printf("  Format: %.4s\r\n", header.Format);
+    printf("  Audio Format: %d\r\n", header.AudioFormat);
+    printf("  Number of Channels: %d\r\n", header.NumChannels);
+    printf("  Sample Rate: %d Hz\r\n", header.SampleRate);
+    printf("  Byte Rate: %d\r\n", header.ByteRate);
+    printf("  Block Align: %d\r\n", header.BlockAlign);
+    printf("  Bits Per Sample: %d\r\n", header.BitsPerSample);
+    printf("  Subchunk2ID: %.4s\r\n", header.Subchunk2ID);
+    printf("  Subchunk2Size: %d bytes\r\n", header.Subchunk2Size);
+
+    // Close the file
+    f_close(&file);
 }
 /* ======================================================== */
 
