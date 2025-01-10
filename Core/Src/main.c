@@ -131,7 +131,6 @@ void new_folder(const char *foldername);
 void ReadWAVFileInfo(const char *filename);
 
 void AI_Init(void);
-
 int AI_Process(const float* input_data);
 
 int read_wav_file(const char *filename, int16_t *audio_buffer, uint32_t *num_samples);
@@ -139,6 +138,7 @@ void normalize_audio(int16_t *audio_data, uint32_t num_samples, float *normalize
 void apply_fft(float *normalized_buffer, float *fft_output, uint32_t fft_size);
 void calculate_mel_spectrogram(float *fft_output, float *mel_spectrogram, uint32_t fft_size, uint32_t num_mel_bins);
 void prepare_ai_model_input(float *mel_spectrogram, float *model_input_buffer, uint32_t num_mel_bins, uint32_t ai_input_size);
+int preprocess_wav_data(float *input_buffer);
 
 /* USER CODE END PFP */
 
@@ -289,48 +289,60 @@ int main(void)
   uint32_t write_index = 0; // AI stuff
   while (1)
   {
-    /* USER CODE END WHILE */
+      check_button_release();
+      printf("Waiting for input to record...\r\n");
+      HAL_Delay(1000);
 
-    /* USER CODE BEGIN 3 */
+      if (button_pressed == 1)
+      {
+          /* Toggle the green led to visually show action */
+          HAL_GPIO_TogglePin(USR_LED_GPIO_Port, USR_LED_Pin);
+          HAL_Delay(100);
+          HAL_GPIO_TogglePin(USR_LED_GPIO_Port, USR_LED_Pin);
+          HAL_Delay(100);
 
-	  /* Standby : waiting for the button to be pressed to start recording */
-	  check_button_release();
-	  printf("Waiting for input to record...\r\n");
-	  HAL_Delay(1000);
+          /* If the program is not already recording... */
+          if (AudioState == AUDIO_STATE_IDLE)
+          {
+              /* Configure the audio recorder: sampling frequency, bits-depth, number of channels */
+              AUDIO_REC_Start();
+          }
 
-	  if (button_pressed == 1)
-	  {
-		  /* Toggle the green led to visually show action */
-		  HAL_GPIO_TogglePin(USR_LED_GPIO_Port, USR_LED_Pin);
-		  HAL_Delay(100);
-		  HAL_GPIO_TogglePin(USR_LED_GPIO_Port, USR_LED_Pin);
-		  HAL_Delay(100);
+          /* While recording, we loop the recording process */
+          while (AudioState == AUDIO_STATE_RECORD)
+          {
+              status = AUDIO_REC_Process();
+          }
 
-		  /* If the program is not already recording... */
-		  if(AudioState == AUDIO_STATE_IDLE)
-		  {
-		    /* Configure the audio recorder: sampling frequency, bits-depth, number of channels */
-		    AUDIO_REC_Start();
-		  }
+          /* Once we stop recording, we correctly close the .WAV */
+          if (AudioState == AUDIO_STATE_STOP)
+          {
+              status = AUDIO_REC_Process();
+              printf("Recording stopped.\r\n");
+          }
 
-		  /* While recording, we loop the recording process */
-		  while(AudioState == AUDIO_STATE_RECORD)
-		  {
-		    status = AUDIO_REC_Process();
-		  }
+          // Process the WAV file for AI inference
+          if (status == 0)  // Ensure the WAV file was properly processed
+          {
+              int ret = preprocess_wav_data(in_data);
+              if (ret == 0)  // Check if preprocessing was successful
+              {
+                  // Run inference on the preprocessed data
+                  int activity_index = AI_Process(in_data);
+                  printf("Predicted activity: %s\r\n", activities[activity_index]);
+              }
+              else
+              {
+                  printf("Error: WAV file preprocessing failed.\r\n");
+              }
+          }
+          else
+          {
+              printf("Error: WAV file info reading failed.\r\n");
+          }
+      }
 
-		  /* Once we stop recording, we correctly close the .WAV */
-		  if (AudioState == AUDIO_STATE_STOP)
-		  {
-			status = AUDIO_REC_Process();
-		    printf("Recording stopped.\r\n");
-		  }
-
-		  ReadWAVFileInfo("WAVE.wav");
-	  }
-
-
-
+      HAL_Delay(100);  // Small delay for stability
   }
   /* USER CODE END 3 */
 }
@@ -610,6 +622,32 @@ void prepare_ai_model_input(float *mel_spectrogram, float *model_input_buffer, u
     }
 }
 
+int preprocess_wav_data(float *input_buffer) {
+    int16_t audio_buffer[FFT_SIZE];
+    float normalized_buffer[FFT_SIZE];
+    float fft_output[FFT_SIZE];
+    float mel_spectrogram[NUM_MEL_BINS];
+    uint32_t num_samples;
+
+    // Step 1: Read the WAV file and get audio samples
+    if (read_wav_file("WAVE.wav", audio_buffer, &num_samples) != 0) {
+        return -1;
+    }
+
+    // Step 2: Normalize audio data to [-1, 1]
+    normalize_audio(audio_buffer, num_samples, normalized_buffer);
+
+    // Step 3: Apply FFT to the normalized audio data
+    apply_fft(normalized_buffer, fft_output, FFT_SIZE);
+
+    // Step 4: Convert FFT output to Mel spectrogram
+    calculate_mel_spectrogram(fft_output, mel_spectrogram, FFT_SIZE / 2, NUM_MEL_BINS);
+
+    // Step 5: Prepare the AI model input buffer with Mel spectrogram
+    prepare_ai_model_input(mel_spectrogram, input_buffer, NUM_MEL_BINS, AI_NETWORK_IN_1_SIZE);
+
+    return 0;
+}
 
 
 
