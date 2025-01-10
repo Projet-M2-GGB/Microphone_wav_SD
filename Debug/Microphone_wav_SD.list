@@ -7,45 +7,45 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
   1 .text         00014104  080001d0  080001d0  000011d0  2**4
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .rodata       000aa308  080142e0  080142e0  000152e0  2**5
+  2 .rodata       000aa3a8  080142e0  080142e0  000152e0  2**5
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  3 .ARM.extab    00000000  080be5e8  080be5e8  000c09d4  2**0
+  3 .ARM.extab    00000000  080be688  080be688  000c09d4  2**0
                   CONTENTS
-  4 .ARM          00000008  080be5e8  080be5e8  000bf5e8  2**2
+  4 .ARM          00000008  080be688  080be688  000bf688  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  5 .preinit_array 00000000  080be5f0  080be5f0  000c09d4  2**0
+  5 .preinit_array 00000000  080be690  080be690  000c09d4  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  6 .init_array   00000004  080be5f0  080be5f0  000bf5f0  2**2
+  6 .init_array   00000004  080be690  080be690  000bf690  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  7 .fini_array   00000004  080be5f4  080be5f4  000bf5f4  2**2
+  7 .fini_array   00000004  080be694  080be694  000bf694  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  8 .data         000009d4  20000000  080be5f8  000c0000  2**2
+  8 .data         000009d4  20000000  080be698  000c0000  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-  9 .bss          00005608  200009d4  080befcc  000c09d4  2**2
+  9 .bss          00005608  200009d4  080bf06c  000c09d4  2**2
                   ALLOC
- 10 ._user_heap_stack 00003804  20005fdc  080befcc  000c0fdc  2**0
+ 10 ._user_heap_stack 00004004  20005fdc  080bf06c  000c0fdc  2**0
                   ALLOC
  11 .ARM.attributes 00000030  00000000  00000000  000c09d4  2**0
                   CONTENTS, READONLY
- 12 .debug_info   0001f57d  00000000  00000000  000c0a04  2**0
+ 12 .debug_info   0001f927  00000000  00000000  000c0a04  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 13 .debug_abbrev 00004cd8  00000000  00000000  000dff81  2**0
+ 13 .debug_abbrev 00004ce0  00000000  00000000  000e032b  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_aranges 000018a8  00000000  00000000  000e4c60  2**3
+ 14 .debug_aranges 000018d0  00000000  00000000  000e5010  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_rnglists 000012d7  00000000  00000000  000e6508  2**0
+ 15 .debug_rnglists 000012ea  00000000  00000000  000e68e0  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_macro  0002cb99  00000000  00000000  000e77df  2**0
+ 16 .debug_macro  0002d271  00000000  00000000  000e7bca  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   0002326b  00000000  00000000  00114378  2**0
+ 17 .debug_line   00023755  00000000  00000000  00114e3b  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    00102715  00000000  00000000  001375e3  2**0
+ 18 .debug_str    00103d90  00000000  00000000  00138590  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000086  00000000  00000000  00239cf8  2**0
+ 19 .comment      00000086  00000000  00000000  0023c320  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  000073b8  00000000  00000000  00239d80  2**2
+ 20 .debug_frame  00007480  00000000  00000000  0023c3a8  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 00000068  00000000  00000000  00241138  2**0
+ 21 .debug_line_str 00000068  00000000  00000000  00243828  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -2045,7 +2045,7 @@ int main(void)
  8001418:	f107 02d0 	add.w	r2, r7, #208	@ 0xd0
  800141c:	f502 4270 	add.w	r2, r2, #61440	@ 0xf000
  8001420:	f8c2 39c0 	str.w	r3, [r2, #2496]	@ 0x9c0
-	/* USER CODE END 1 */
+  /* USER CODE END 1 */
 
   /* Enable the CPU Cache */
 
@@ -4147,7 +4147,7 @@ void *_sbrk(ptrdiff_t incr)
  8001fe8:	46bd      	mov	sp, r7
  8001fea:	bd80      	pop	{r7, pc}
  8001fec:	20050000 	.word	0x20050000
- 8001ff0:	00000800 	.word	0x00000800
+ 8001ff0:	00002000 	.word	0x00002000
  8001ff4:	20000e24 	.word	0x20000e24
  8001ff8:	20005fe0 	.word	0x20005fe0
 
@@ -4490,7 +4490,7 @@ LoopFillZerobss:
   ldr r1, =_edata
  80021c4:	200009d4 	.word	0x200009d4
   ldr r2, =_sidata
- 80021c8:	080be5f8 	.word	0x080be5f8
+ 80021c8:	080be698 	.word	0x080be698
   ldr r2, =_sbss
  80021cc:	200009d4 	.word	0x200009d4
   ldr r4, =_ebss
@@ -11867,7 +11867,7 @@ static uint32_t DMA_CalcBaseAndBitshift(DMA_HandleTypeDef *hdma)
  8004e0c:	4770      	bx	lr
  8004e0e:	bf00      	nop
  8004e10:	aaaaaaab 	.word	0xaaaaaaab
- 8004e14:	080147dc 	.word	0x080147dc
+ 8004e14:	08014868 	.word	0x08014868
  8004e18:	fffffc00 	.word	0xfffffc00
 
 08004e1c <DMA_CheckFifoParam>:
@@ -16539,7 +16539,7 @@ HAL_StatusTypeDef HAL_RCC_ClockConfig(RCC_ClkInitTypeDef  *RCC_ClkInitStruct, ui
  80068b2:	bf00      	nop
  80068b4:	40023c00 	.word	0x40023c00
  80068b8:	40023800 	.word	0x40023800
- 80068bc:	080147c4 	.word	0x080147c4
+ 80068bc:	08014850 	.word	0x08014850
  80068c0:	20000000 	.word	0x20000000
  80068c4:	20000038 	.word	0x20000038
 
@@ -16794,7 +16794,7 @@ uint32_t HAL_RCC_GetPCLK1Freq(void)
  8006a88:	4618      	mov	r0, r3
  8006a8a:	bd80      	pop	{r7, pc}
  8006a8c:	40023800 	.word	0x40023800
- 8006a90:	080147d4 	.word	0x080147d4
+ 8006a90:	08014860 	.word	0x08014860
 
 08006a94 <HAL_RCC_GetPCLK2Freq>:
   * @note   Each time PCLK2 changes, this function must be called to update the
@@ -16820,7 +16820,7 @@ uint32_t HAL_RCC_GetPCLK2Freq(void)
  8006ab0:	4618      	mov	r0, r3
  8006ab2:	bd80      	pop	{r7, pc}
  8006ab4:	40023800 	.word	0x40023800
- 8006ab8:	080147d4 	.word	0x080147d4
+ 8006ab8:	08014860 	.word	0x08014860
 
 08006abc <HAL_RCCEx_PeriphCLKConfig>:
   *         the backup registers) are set to their reset values.
@@ -27083,16 +27083,16 @@ AUDIO_ErrorTypeDef AUDIO_REC_Start(void)
  800a610:	20000040 	.word	0x20000040
  800a614:	20005b78 	.word	0x20005b78
  800a618:	20005b7c 	.word	0x20005b7c
- 800a61c:	08014658 	.word	0x08014658
- 800a620:	0801466c 	.word	0x0801466c
- 800a624:	08014680 	.word	0x08014680
+ 800a61c:	080146e4 	.word	0x080146e4
+ 800a620:	080146f8 	.word	0x080146f8
+ 800a624:	0801470c 	.word	0x0801470c
  800a628:	20005944 	.word	0x20005944
  800a62c:	200010dc 	.word	0x200010dc
- 800a630:	0801468c 	.word	0x0801468c
+ 800a630:	08014718 	.word	0x08014718
  800a634:	200009f0 	.word	0x200009f0
- 800a638:	080146a8 	.word	0x080146a8
+ 800a638:	08014734 	.word	0x08014734
  800a63c:	20001108 	.word	0x20001108
- 800a640:	080146c8 	.word	0x080146c8
+ 800a640:	08014754 	.word	0x08014754
 
 0800a644 <AUDIO_REC_Process>:
   * @brief  Manages Audio process. 
@@ -27301,17 +27301,17 @@ AUDIO_ErrorTypeDef AUDIO_REC_Process(void)
  800a7bc:	20001108 	.word	0x20001108
  800a7c0:	0004e1ff 	.word	0x0004e1ff
  800a7c4:	20005944 	.word	0x20005944
- 800a7c8:	080146e0 	.word	0x080146e0
+ 800a7c8:	0801476c 	.word	0x0801476c
  800a7cc:	10624dd3 	.word	0x10624dd3
  800a7d0:	20000044 	.word	0x20000044
- 800a7d4:	080146f4 	.word	0x080146f4
+ 800a7d4:	08014780 	.word	0x08014780
  800a7d8:	88888889 	.word	0x88888889
- 800a7dc:	08014708 	.word	0x08014708
- 800a7e0:	08014718 	.word	0x08014718
- 800a7e4:	08014728 	.word	0x08014728
+ 800a7dc:	08014794 	.word	0x08014794
+ 800a7e0:	080147a4 	.word	0x080147a4
+ 800a7e4:	080147b4 	.word	0x080147b4
  800a7e8:	20005918 	.word	0x20005918
  800a7ec:	200010dc 	.word	0x200010dc
- 800a7f0:	08014734 	.word	0x08014734
+ 800a7f0:	080147c0 	.word	0x080147c0
 
 0800a7f4 <BSP_AUDIO_IN_TransferComplete_CallBack>:
   * @brief  Calculates the remaining file size and new position of the pointer.
@@ -27975,7 +27975,7 @@ void MX_FATFS_Init(void)
  800ac28:	bf00      	nop
  800ac2a:	bd80      	pop	{r7, pc}
  800ac2c:	20005b78 	.word	0x20005b78
- 800ac30:	080147e4 	.word	0x080147e4
+ 800ac30:	08014870 	.word	0x08014870
  800ac34:	20005b74 	.word	0x20005b74
 
 0800ac38 <get_fattime>:
@@ -32144,8 +32144,8 @@ FRESULT create_name (	/* FR_OK: successful, FR_INVALID_NAME: could not create */
  800c406:	46bd      	mov	sp, r7
  800c408:	bd80      	pop	{r7, pc}
  800c40a:	bf00      	nop
- 800c40c:	080147f8 	.word	0x080147f8
- 800c410:	08014750 	.word	0x08014750
+ 800c40c:	08014884 	.word	0x08014884
+ 800c410:	080147dc 	.word	0x080147dc
 
 0800c414 <follow_path>:
 static
@@ -35943,9 +35943,9 @@ FRESULT f_lseek (
  800dc7c:	65fb      	str	r3, [r7, #92]	@ 0x5c
  800dc7e:	e012      	b.n	800dca6 <f_mkfs+0x2aa>
  800dc80:	20005db4 	.word	0x20005db4
- 800dc84:	08014878 	.word	0x08014878
+ 800dc84:	08014904 	.word	0x08014904
  800dc88:	0ffffff5 	.word	0x0ffffff5
- 800dc8c:	08014888 	.word	0x08014888
+ 800dc8c:	08014914 	.word	0x08014914
 				} else {
 					fmt = FS_FAT12;
  800dc90:	2301      	movs	r3, #1
@@ -36546,9 +36546,9 @@ FRESULT f_lseek (
  800e0de:	d10d      	bne.n	800e0fc <f_mkfs+0x700>
  800e0e0:	6d3b      	ldr	r3, [r7, #80]	@ 0x50
  800e0e2:	e00c      	b.n	800e0fe <f_mkfs+0x702>
- 800e0e4:	08014760 	.word	0x08014760
- 800e0e8:	0801476c 	.word	0x0801476c
- 800e0ec:	08014780 	.word	0x08014780
+ 800e0e4:	080147ec 	.word	0x080147ec
+ 800e0e8:	080147f8 	.word	0x080147f8
+ 800e0ec:	0801480c 	.word	0x0801480c
  800e0f0:	41615252 	.word	0x41615252
  800e0f4:	61417272 	.word	0x61417272
  800e0f8:	00fffff8 	.word	0x00fffff8
@@ -37434,7 +37434,7 @@ ai_buffer ai_network_data_activations_buffer_get(const ai_handle ptr)
  800e6b2:	bf00      	nop
  800e6b4:	00040440 	.word	0x00040440
  800e6b8:	00010630 	.word	0x00010630
- 800e6bc:	08014794 	.word	0x08014794
+ 800e6bc:	08014820 	.word	0x08014820
 
 0800e6c0 <ai_network_data_weights_buffer_get>:
  * @return an ai_buffer initialized struct
@@ -37492,7 +37492,7 @@ ai_buffer ai_network_data_weights_buffer_get(const ai_handle ptr)
  800e71e:	bf00      	nop
  800e720:	40040440 	.word	0x40040440
  800e724:	000a9998 	.word	0x000a9998
- 800e728:	080147a4 	.word	0x080147a4
+ 800e728:	08014830 	.word	0x08014830
 
 0800e72c <ai_network_data_weights_get>:
  * @return a ai_handle pointer to the weights array
@@ -42698,11 +42698,11 @@ ai_handle ai_network_data_weights_get(void)
  8011e4c:	e7ee      	b.n	8011e2c <_printf_float+0x2a4>
  8011e4e:	bf00      	nop
  8011e50:	7fefffff 	.word	0x7fefffff
- 8011e54:	080be278 	.word	0x080be278
- 8011e58:	080be27c 	.word	0x080be27c
- 8011e5c:	080be280 	.word	0x080be280
- 8011e60:	080be284 	.word	0x080be284
- 8011e64:	080be288 	.word	0x080be288
+ 8011e54:	080be318 	.word	0x080be318
+ 8011e58:	080be31c 	.word	0x080be31c
+ 8011e5c:	080be320 	.word	0x080be320
+ 8011e60:	080be324 	.word	0x080be324
+ 8011e64:	080be328 	.word	0x080be328
  8011e68:	6da3      	ldr	r3, [r4, #88]	@ 0x58
  8011e6a:	f8dd a028 	ldr.w	sl, [sp, #40]	@ 0x28
  8011e6e:	4553      	cmp	r3, sl
@@ -43182,8 +43182,8 @@ ai_handle ai_network_data_weights_get(void)
  80122e8:	f104 0619 	add.w	r6, r4, #25
  80122ec:	e7f5      	b.n	80122da <_printf_i+0x222>
  80122ee:	bf00      	nop
- 80122f0:	080be28a 	.word	0x080be28a
- 80122f4:	080be29b 	.word	0x080be29b
+ 80122f0:	080be32a 	.word	0x080be32a
+ 80122f4:	080be33b 	.word	0x080be33b
 
 080122f8 <std>:
  80122f8:	2300      	movs	r3, #0
@@ -43777,10 +43777,10 @@ ai_handle ai_network_data_weights_get(void)
  801280e:	4798      	blx	r3
  8012810:	3601      	adds	r6, #1
  8012812:	e7f2      	b.n	80127fa <__libc_init_array+0x1e>
- 8012814:	080be5f0 	.word	0x080be5f0
- 8012818:	080be5f0 	.word	0x080be5f0
- 801281c:	080be5f0 	.word	0x080be5f0
- 8012820:	080be5f4 	.word	0x080be5f4
+ 8012814:	080be690 	.word	0x080be690
+ 8012818:	080be690 	.word	0x080be690
+ 801281c:	080be690 	.word	0x080be690
+ 8012820:	080be694 	.word	0x080be694
 
 08012824 <__retarget_lock_init_recursive>:
  8012824:	4770      	bx	lr
@@ -44189,15 +44189,15 @@ ai_handle ai_network_data_weights_get(void)
  8012c14:	3fc68a28 	.word	0x3fc68a28
  8012c18:	509f79fb 	.word	0x509f79fb
  8012c1c:	3fd34413 	.word	0x3fd34413
- 8012c20:	080be2b9 	.word	0x080be2b9
- 8012c24:	080be2d0 	.word	0x080be2d0
+ 8012c20:	080be359 	.word	0x080be359
+ 8012c24:	080be370 	.word	0x080be370
  8012c28:	7ff00000 	.word	0x7ff00000
- 8012c2c:	080be289 	.word	0x080be289
+ 8012c2c:	080be329 	.word	0x080be329
  8012c30:	3ff80000 	.word	0x3ff80000
- 8012c34:	080be3c8 	.word	0x080be3c8
- 8012c38:	080be328 	.word	0x080be328
- 8012c3c:	080be2b5 	.word	0x080be2b5
- 8012c40:	080be288 	.word	0x080be288
+ 8012c34:	080be468 	.word	0x080be468
+ 8012c38:	080be3c8 	.word	0x080be3c8
+ 8012c3c:	080be355 	.word	0x080be355
+ 8012c40:	080be328 	.word	0x080be328
  8012c44:	f8db 301c 	ldr.w	r3, [fp, #28]
  8012c48:	6018      	str	r0, [r3, #0]
  8012c4a:	9b07      	ldr	r3, [sp, #28]
@@ -44449,8 +44449,8 @@ ai_handle ai_network_data_weights_get(void)
  8012f0a:	f7ed fb95 	bl	8000638 <__aeabi_dmul>
  8012f0e:	e9cd 0102 	strd	r0, r1, [sp, #8]
  8012f12:	e7c4      	b.n	8012e9e <_dtoa_r+0x546>
- 8012f14:	080be3c8 	.word	0x080be3c8
- 8012f18:	080be3a0 	.word	0x080be3a0
+ 8012f14:	080be468 	.word	0x080be468
+ 8012f18:	080be440 	.word	0x080be440
  8012f1c:	3ff00000 	.word	0x3ff00000
  8012f20:	40240000 	.word	0x40240000
  8012f24:	401c0000 	.word	0x401c0000
@@ -45052,8 +45052,8 @@ ai_handle ai_network_data_weights_get(void)
  80134d0:	f000 f8b2 	bl	8013638 <__multadd>
  80134d4:	4681      	mov	r9, r0
  80134d6:	e7ea      	b.n	80134ae <_dtoa_r+0xb56>
- 80134d8:	080be328 	.word	0x080be328
- 80134dc:	080be2ac 	.word	0x080be2ac
+ 80134d8:	080be3c8 	.word	0x080be3c8
+ 80134dc:	080be34c 	.word	0x080be34c
 
 080134e0 <_free_r>:
  80134e0:	b538      	push	{r3, r4, r5, lr}
@@ -45177,8 +45177,8 @@ ai_handle ai_network_data_weights_get(void)
  80135e4:	e9c0 3303 	strd	r3, r3, [r0, #12]
  80135e8:	e7f7      	b.n	80135da <_Balloc+0x66>
  80135ea:	bf00      	nop
- 80135ec:	080be2b9 	.word	0x080be2b9
- 80135f0:	080be339 	.word	0x080be339
+ 80135ec:	080be359 	.word	0x080be359
+ 80135f0:	080be3d9 	.word	0x080be3d9
 
 080135f4 <_Bfree>:
  80135f4:	b570      	push	{r4, r5, r6, lr}
@@ -45206,8 +45206,8 @@ ai_handle ai_network_data_weights_get(void)
  8013628:	6021      	str	r1, [r4, #0]
  801362a:	f843 4022 	str.w	r4, [r3, r2, lsl #2]
  801362e:	bd70      	pop	{r4, r5, r6, pc}
- 8013630:	080be2b9 	.word	0x080be2b9
- 8013634:	080be339 	.word	0x080be339
+ 8013630:	080be359 	.word	0x080be359
+ 8013634:	080be3d9 	.word	0x080be3d9
 
 08013638 <__multadd>:
  8013638:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
@@ -45261,8 +45261,8 @@ ai_handle ai_network_data_weights_get(void)
  80136b4:	6125      	str	r5, [r4, #16]
  80136b6:	4620      	mov	r0, r4
  80136b8:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
- 80136bc:	080be328 	.word	0x080be328
- 80136c0:	080be339 	.word	0x080be339
+ 80136bc:	080be3c8 	.word	0x080be3c8
+ 80136c0:	080be3d9 	.word	0x080be3d9
 
 080136c4 <__hi0bits>:
  80136c4:	f5b0 3f80 	cmp.w	r0, #65536	@ 0x10000
@@ -45352,8 +45352,8 @@ ai_handle ai_network_data_weights_get(void)
  801377a:	6103      	str	r3, [r0, #16]
  801377c:	bd10      	pop	{r4, pc}
  801377e:	bf00      	nop
- 8013780:	080be328 	.word	0x080be328
- 8013784:	080be339 	.word	0x080be339
+ 8013780:	080be3c8 	.word	0x080be3c8
+ 8013784:	080be3d9 	.word	0x080be3d9
 
 08013788 <__multiply>:
  8013788:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
@@ -45472,8 +45472,8 @@ ai_handle ai_network_data_weights_get(void)
  80138ce:	e799      	b.n	8013804 <__multiply+0x7c>
  80138d0:	3e01      	subs	r6, #1
  80138d2:	e79b      	b.n	801380c <__multiply+0x84>
- 80138d4:	080be328 	.word	0x080be328
- 80138d8:	080be339 	.word	0x080be339
+ 80138d4:	080be3c8 	.word	0x080be3c8
+ 80138d8:	080be3d9 	.word	0x080be3d9
 
 080138dc <__pow5mult>:
  80138dc:	e92d 43f8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, lr}
@@ -45541,9 +45541,9 @@ ai_handle ai_network_data_weights_get(void)
  801397c:	4630      	mov	r0, r6
  801397e:	e8bd 83f8 	ldmia.w	sp!, {r3, r4, r5, r6, r7, r8, r9, pc}
  8013982:	bf00      	nop
- 8013984:	080be394 	.word	0x080be394
- 8013988:	080be2b9 	.word	0x080be2b9
- 801398c:	080be339 	.word	0x080be339
+ 8013984:	080be434 	.word	0x080be434
+ 8013988:	080be359 	.word	0x080be359
+ 801398c:	080be3d9 	.word	0x080be3d9
 
 08013990 <__lshift>:
  8013990:	e92d 47f0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, lr}
@@ -45622,8 +45622,8 @@ ai_handle ai_network_data_weights_get(void)
  8013a5a:	d8f9      	bhi.n	8013a50 <__lshift+0xc0>
  8013a5c:	e7ea      	b.n	8013a34 <__lshift+0xa4>
  8013a5e:	bf00      	nop
- 8013a60:	080be328 	.word	0x080be328
- 8013a64:	080be339 	.word	0x080be339
+ 8013a60:	080be3c8 	.word	0x080be3c8
+ 8013a64:	080be3d9 	.word	0x080be3d9
 
 08013a68 <__mcmp>:
  8013a68:	690a      	ldr	r2, [r1, #16]
@@ -45759,8 +45759,8 @@ ai_handle ai_network_data_weights_get(void)
  8013bba:	3f01      	subs	r7, #1
  8013bbc:	e7e7      	b.n	8013b8e <__mdiff+0xee>
  8013bbe:	bf00      	nop
- 8013bc0:	080be328 	.word	0x080be328
- 8013bc4:	080be339 	.word	0x080be339
+ 8013bc0:	080be3c8 	.word	0x080be3c8
+ 8013bc4:	080be3d9 	.word	0x080be3d9
 
 08013bc8 <__d2b>:
  8013bc8:	e92d 43f7 	stmdb	sp!, {r0, r1, r2, r4, r5, r6, r7, r8, r9, lr}
@@ -45826,8 +45826,8 @@ ai_handle ai_network_data_weights_get(void)
  8013c66:	f7ff fd2d 	bl	80136c4 <__hi0bits>
  8013c6a:	ebc0 1042 	rsb	r0, r0, r2, lsl #5
  8013c6e:	e7e5      	b.n	8013c3c <__d2b+0x74>
- 8013c70:	080be328 	.word	0x080be328
- 8013c74:	080be339 	.word	0x080be339
+ 8013c70:	080be3c8 	.word	0x080be3c8
+ 8013c74:	080be3d9 	.word	0x080be3d9
 
 08013c78 <__sfputc_r>:
  8013c78:	6893      	ldr	r3, [r2, #8]
@@ -46093,11 +46093,11 @@ ai_handle ai_network_data_weights_get(void)
  8013ee0:	4630      	mov	r0, r6
  8013ee2:	f7fe f8e9 	bl	80120b8 <_printf_i>
  8013ee6:	e7e4      	b.n	8013eb2 <_vfiprintf_r+0x1e6>
- 8013ee8:	080be490 	.word	0x080be490
- 8013eec:	080be49a 	.word	0x080be49a
+ 8013ee8:	080be530 	.word	0x080be530
+ 8013eec:	080be53a 	.word	0x080be53a
  8013ef0:	08011b89 	.word	0x08011b89
  8013ef4:	08013ca7 	.word	0x08013ca7
- 8013ef8:	080be496 	.word	0x080be496
+ 8013ef8:	080be536 	.word	0x080be536
 
 08013efc <__sflush_r>:
  8013efc:	f9b1 200c 	ldrsh.w	r2, [r1, #12]
@@ -46393,9 +46393,9 @@ ai_handle ai_network_data_weights_get(void)
  8014184:	e7f4      	b.n	8014170 <__assert_func+0x14>
  8014186:	bf00      	nop
  8014188:	20000818 	.word	0x20000818
- 801418c:	080be4e6 	.word	0x080be4e6
- 8014190:	080be4b8 	.word	0x080be4b8
- 8014194:	080be4ab 	.word	0x080be4ab
+ 801418c:	080be586 	.word	0x080be586
+ 8014190:	080be558 	.word	0x080be558
+ 8014194:	080be54b 	.word	0x080be54b
 
 08014198 <_calloc_r>:
  8014198:	b570      	push	{r4, r5, r6, lr}

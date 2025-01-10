@@ -86,7 +86,7 @@ main-build: Microphone_wav_SD.elf secondary-outputs
 
 # Tool invocations
 Microphone_wav_SD.elf Microphone_wav_SD.map: $(OBJS) $(USER_OBJS) C:\Users\fabi_\Documents\STM32_Projects\Microphone_wav_SD\STM32F746NGHX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Microphone_wav_SD.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\Users\fabi_\Documents\STM32_Projects\Microphone_wav_SD\STM32F746NGHX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Microphone_wav_SD.map" -Wl,--gc-sections -static -L../Middlewares/ST/AI/Lib --specs=nano.specs -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+	arm-none-eabi-gcc -o "Microphone_wav_SD.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\Users\fabi_\Documents\STM32_Projects\Microphone_wav_SD\STM32F746NGHX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Microphone_wav_SD.map" -Wl,--gc-sections -static -L../Middlewares/ST/AI/Lib -L"C:\Users\fabi_\Documents\STM32_Projects\Microphone_wav_SD\Drivers\CMSIS\Lib\GCC" --specs=nano.specs -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
