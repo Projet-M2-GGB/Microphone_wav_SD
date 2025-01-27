@@ -277,12 +277,11 @@ int main(void)
   MX_FATFS_Init();
   MX_SDMMC1_SD_Init();
   MX_CRC_Init();
-  __HAL_RCC_CRC_CLK_ENABLE();
   /* USER CODE BEGIN 2 */
 
   /* We format the SD card */
   printf("SD card init...\r\n");
-  //SDCard_InitAndFormat();
+  SDCard_InitAndFormat();
 
   AI_Init();
 
@@ -296,7 +295,7 @@ int main(void)
         check_button_release();
         printf("Waiting for input to record...\r\n");
         HAL_Delay(1000);
-      /* USER CODE END WHILE */
+
 
         if (button_pressed == 1)
         {
@@ -351,8 +350,12 @@ int main(void)
 
         HAL_Delay(100);  // Small delay for stability
   }
-  /* USER CODE END 3 */
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
 }
+  /* USER CODE END 3 */
+
 
 /**
   * @brief System Clock Configuration

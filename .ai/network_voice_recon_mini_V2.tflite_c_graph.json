@@ -10,7 +10,7 @@
                     "size": 63984
                 },
                 {
-                    "buffer_name": "upsample_0_output_array",
+                    "buffer_name": "resize_0_output_array",
                     "offset": 63984,
                     "size": 3136
                 },
@@ -52,7 +52,7 @@
         }
     },
     "activations_alignment": 4,
-    "arguments": "analyze --target stm32f7 --name network -m C:/Users/fabi_/OneDrive/Documentos/2_M2_oca/Projet/voice_recon_mini_V2.tflite --compression none --verbosity 1 --allocate-inputs --allocate-outputs --workspace C:/Users/fabi_/AppData/Local/Temp/mxAI_workspace7520709689117008351628034246368860 --output C:/Users/fabi_/.stm32cubemx/network_output",
+    "arguments": "generate --target stm32f7 --name network -m C:/Users/fabi_/OneDrive/Documentos/2_M2_oca/Projet/voice_recon_mini_V2.tflite --compression none --verbosity 1 --workspace C:/Users/fabi_/AppData/Local/Temp/mxAI_workspace7679670348988009502440155395318925 --output C:/Users/fabi_/.stm32cubemx/network_output",
     "c_activations_count": 1,
     "c_arrays": [
         {
@@ -367,6 +367,32 @@
             "c_bits": 32,
             "c_id": 12,
             "c_mem_pool": "**default**",
+            "c_size_in_byte": 3136,
+            "c_type": "float",
+            "format": "float",
+            "is_const": false,
+            "mem_pool": "activations",
+            "n_items": 784,
+            "name": "resize_0_output_array",
+            "offset": 63984,
+            "scale": [],
+            "size": 784,
+            "tensors": [
+                {
+                    "name": "resize_0_output",
+                    "shape": [
+                        28,
+                        28,
+                        1
+                    ]
+                }
+            ],
+            "zeropoint": []
+        },
+        {
+            "c_bits": 32,
+            "c_id": 13,
+            "c_mem_pool": "**default**",
             "c_size_in_byte": 63984,
             "c_type": "float",
             "format": "float",
@@ -389,32 +415,6 @@
                 }
             ],
             "zeropoint": []
-        },
-        {
-            "c_bits": 32,
-            "c_id": 13,
-            "c_mem_pool": "**default**",
-            "c_size_in_byte": 3136,
-            "c_type": "float",
-            "format": "float",
-            "is_const": false,
-            "mem_pool": "activations",
-            "n_items": 784,
-            "name": "upsample_0_output_array",
-            "offset": 63984,
-            "scale": [],
-            "size": 784,
-            "tensors": [
-                {
-                    "name": "upsample_0_output",
-                    "shape": [
-                        28,
-                        28,
-                        1
-                    ]
-                }
-            ],
-            "zeropoint": []
         }
     ],
     "c_arrays_n": 14,
@@ -425,10 +425,10 @@
             ],
             "c_id": 0,
             "is_wrapped": "",
-            "layer_type": "Upsample",
+            "layer_type": "Resize",
             "m_id": 0,
             "macc": 3136,
-            "name": "upsample_0",
+            "name": "resize_0",
             "op_by_type": {
                 "smul_f32_f32": 3136
             },
@@ -438,7 +438,7 @@
                     "serving_default_keras_tensor0_output"
                 ],
                 "outputs": [
-                    "upsample_0_output"
+                    "resize_0_output"
                 ],
                 "scratchs": [],
                 "weights": []
@@ -465,7 +465,7 @@
             "rom": 640,
             "tensors": {
                 "inputs": [
-                    "upsample_0_output"
+                    "resize_0_output"
                 ],
                 "outputs": [
                     "conv2d_1_output"
@@ -595,7 +595,7 @@
         ]
     },
     "data_alignment": 4,
-    "date_time": "2025-01-27T10:31:51+0100",
+    "date_time": "2025-01-27T14:56:43+0100",
     "inputs": [
         "serving_default_keras_tensor0_output"
     ],
@@ -616,8 +616,8 @@
     "outputs": [
         "gemm_5_output"
     ],
-    "st_ai_version": "1.0.0-19894",
-    "tool_version": "1.0.0-19894",
+    "st_ai_version": "2.0.0-20049",
+    "tool_version": "2.0.0-20049",
     "type": "tflite",
     "version": "1.2",
     "weights": {

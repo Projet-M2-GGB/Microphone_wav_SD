@@ -12,11 +12,7 @@
       "flags": "STAI_FLAG_WEIGHTS|STAI_FLAG_CONST|STAI_FLAG_PREALLOCATED",
       "format": "STAI_FORMAT_FLOAT",
       "id": 96,
-      "intq": {
-        "axis": null,
-        "offsets": [],
-        "scales": []
-      },
+      "intq": {},
       "is_param": true,
       "mpool_id": 1,
       "name": "conv2d_1_bias_array",
@@ -43,11 +39,7 @@
       "flags": "STAI_FLAG_PREALLOCATED|STAI_FLAG_ACTIVATIONS",
       "format": "STAI_FORMAT_FLOAT",
       "id": 85,
-      "intq": {
-        "axis": null,
-        "offsets": [],
-        "scales": []
-      },
+      "intq": {},
       "is_param": false,
       "mpool_id": 0,
       "name": "conv2d_1_output_array",
@@ -78,11 +70,7 @@
       "flags": "STAI_FLAG_PREALLOCATED|STAI_FLAG_ACTIVATIONS|STAI_FLAG_SCRATCHS",
       "format": "STAI_FORMAT_FLOAT",
       "id": 119,
-      "intq": {
-        "axis": null,
-        "offsets": [],
-        "scales": []
-      },
+      "intq": {},
       "is_param": false,
       "mpool_id": 0,
       "name": "conv2d_1_scratch0_array",
@@ -115,11 +103,7 @@
       "flags": "STAI_FLAG_PREALLOCATED|STAI_FLAG_ACTIVATIONS|STAI_FLAG_SCRATCHS",
       "format": "STAI_FORMAT_FLOAT",
       "id": 123,
-      "intq": {
-        "axis": null,
-        "offsets": [],
-        "scales": []
-      },
+      "intq": {},
       "is_param": false,
       "mpool_id": 0,
       "name": "conv2d_1_scratch1_array",
@@ -152,11 +136,7 @@
       "flags": "STAI_FLAG_WEIGHTS|STAI_FLAG_CONST|STAI_FLAG_PREALLOCATED",
       "format": "STAI_FORMAT_FLOAT",
       "id": 93,
-      "intq": {
-        "axis": null,
-        "offsets": [],
-        "scales": []
-      },
+      "intq": {},
       "is_param": true,
       "mpool_id": 1,
       "name": "conv2d_1_weights_array",
@@ -189,11 +169,7 @@
       "flags": "STAI_FLAG_WEIGHTS|STAI_FLAG_CONST|STAI_FLAG_PREALLOCATED",
       "format": "STAI_FORMAT_FLOAT",
       "id": 102,
-      "intq": {
-        "axis": null,
-        "offsets": [],
-        "scales": []
-      },
+      "intq": {},
       "is_param": true,
       "mpool_id": 1,
       "name": "gemm_4_bias_array",
@@ -220,11 +196,7 @@
       "flags": "STAI_FLAG_PREALLOCATED|STAI_FLAG_ACTIVATIONS",
       "format": "STAI_FORMAT_FLOAT",
       "id": 87,
-      "intq": {
-        "axis": null,
-        "offsets": [],
-        "scales": []
-      },
+      "intq": {},
       "is_param": false,
       "mpool_id": 0,
       "name": "gemm_4_output_array",
@@ -251,11 +223,7 @@
       "flags": "STAI_FLAG_WEIGHTS|STAI_FLAG_CONST|STAI_FLAG_PREALLOCATED",
       "format": "STAI_FORMAT_FLOAT",
       "id": 99,
-      "intq": {
-        "axis": null,
-        "offsets": [],
-        "scales": []
-      },
+      "intq": {},
       "is_param": true,
       "mpool_id": 1,
       "name": "gemm_4_weights_array",
@@ -284,11 +252,7 @@
       "flags": "STAI_FLAG_WEIGHTS|STAI_FLAG_CONST|STAI_FLAG_PREALLOCATED",
       "format": "STAI_FORMAT_FLOAT",
       "id": 108,
-      "intq": {
-        "axis": null,
-        "offsets": [],
-        "scales": []
-      },
+      "intq": {},
       "is_param": true,
       "mpool_id": 1,
       "name": "gemm_5_bias_array",
@@ -315,11 +279,7 @@
       "flags": "STAI_FLAG_OUTPUTS|STAI_FLAG_PREALLOCATED|STAI_FLAG_ACTIVATIONS",
       "format": "STAI_FORMAT_FLOAT",
       "id": 91,
-      "intq": {
-        "axis": null,
-        "offsets": [],
-        "scales": []
-      },
+      "intq": {},
       "is_param": false,
       "mpool_id": 0,
       "name": "gemm_5_output_array",
@@ -346,11 +306,7 @@
       "flags": "STAI_FLAG_WEIGHTS|STAI_FLAG_CONST|STAI_FLAG_PREALLOCATED",
       "format": "STAI_FORMAT_FLOAT",
       "id": 105,
-      "intq": {
-        "axis": null,
-        "offsets": [],
-        "scales": []
-      },
+      "intq": {},
       "is_param": true,
       "mpool_id": 1,
       "name": "gemm_5_weights_array",
@@ -379,11 +335,7 @@
       "flags": "STAI_FLAG_PREALLOCATED|STAI_FLAG_ACTIVATIONS",
       "format": "STAI_FORMAT_FLOAT",
       "id": 89,
-      "intq": {
-        "axis": null,
-        "offsets": [],
-        "scales": []
-      },
+      "intq": {},
       "is_param": false,
       "mpool_id": 0,
       "name": "nl_4_nl_output_array",
@@ -404,17 +356,44 @@
       "channel_first": false,
       "channel_last": true,
       "epochs": {
+        "end": 8,
+        "start": 3
+      },
+      "flags": "STAI_FLAG_PREALLOCATED|STAI_FLAG_ACTIVATIONS",
+      "format": "STAI_FORMAT_FLOAT",
+      "id": 83,
+      "intq": {},
+      "is_param": false,
+      "mpool_id": 0,
+      "name": "resize_0_output_array",
+      "nbits": 32,
+      "offset_start": 63984,
+      "qmn": {},
+      "shape": [
+        28,
+        28,
+        1
+      ],
+      "shape_map": [
+        "H",
+        "W",
+        "CH"
+      ],
+      "size_bytes": 3136
+    },
+    {
+      "alignment": 4,
+      "batch": 0,
+      "channel_first": false,
+      "channel_last": true,
+      "epochs": {
         "end": 4,
         "start": 2
       },
       "flags": "STAI_FLAG_INPUTS|STAI_FLAG_PREALLOCATED|STAI_FLAG_ACTIVATIONS",
       "format": "STAI_FORMAT_FLOAT",
       "id": 81,
-      "intq": {
-        "axis": null,
-        "offsets": [],
-        "scales": []
-      },
+      "intq": {},
       "is_param": false,
       "mpool_id": 0,
       "name": "serving_default_keras_tensor0_output_array",
@@ -432,92 +411,52 @@
         "CH"
       ],
       "size_bytes": 63984
-    },
-    {
-      "alignment": 4,
-      "batch": 0,
-      "channel_first": false,
-      "channel_last": true,
-      "epochs": {
-        "end": 8,
-        "start": 3
-      },
-      "flags": "STAI_FLAG_PREALLOCATED|STAI_FLAG_ACTIVATIONS",
-      "format": "STAI_FORMAT_FLOAT",
-      "id": 83,
-      "intq": {
-        "axis": null,
-        "offsets": [],
-        "scales": []
-      },
-      "is_param": false,
-      "mpool_id": 0,
-      "name": "upsample_0_output_array",
-      "nbits": 32,
-      "offset_start": 63984,
-      "qmn": {},
-      "shape": [
-        28,
-        28,
-        1
-      ],
-      "shape_map": [
-        "H",
-        "W",
-        "CH"
-      ],
-      "size_bytes": 3136
     }
   ],
   "environment": {
-    "device": null,
     "generated_model": {
-      "generated_time": "2025-01-27T10:31:51+0100",
+      "generated_time": "2025-01-27T14:56:43+0100",
       "model_files": [
         {
           "name": "network_data_params.h",
-          "signature": "0xe541414a7b485a90a2e99367c0bb26ad"
+          "signature": "0xafe99bac08e5d08908a83094e0623b62"
         },
         {
           "name": "network_data_params.c",
-          "signature": "0xad419eedee0315d6f133b71c6e54da5f"
+          "signature": "0x1ef2e08e92ddd6c29f7bded265e0eea1"
         },
         {
           "name": "network_data.h",
-          "signature": "0x596b8e68a03f3d1c9923870baacaf90a"
+          "signature": "0xa2a6d7383223e5e3aa6a853b0ef4d7b6"
         },
         {
           "name": "network_data.c",
-          "signature": "0x0bc09c1d728646a05cd6d86dee560100"
+          "signature": "0x0d4dcd1bd80d0cb19bd868c6f59442c2"
         },
         {
           "name": "network_config.h",
-          "signature": "0xea12381bdafa1fac6dcaabe21ed1ee81"
+          "signature": "0xe02d0c95877a056d2c8a86eb3149c832"
         },
         {
           "name": "network.h",
-          "signature": "0x638d53647c57db7aa740887c9f9fa9f4"
+          "signature": "0x12a53ee82115b1c3e9e46b3b5bb6b157"
         },
         {
           "name": "network.c",
-          "signature": "0xdd2a2114e98e42ffa941d1ac403bfcb1"
+          "signature": "0xdcc67e1ef6894e302bb1646ef3253bbe"
         }
       ],
-      "n_params": null,
-      "name": "network",
-      "size": null,
-      "type": null
+      "name": "network"
     },
-    "network_signature": "0x64030f602e55d891",
+    "network_signature": "0x1a08b7cec15925c0",
     "test_name": "",
     "tools": [
       {
-        "arguments": "analyze --target stm32f7 --name network -m C:/Users/fabi_/OneDrive/Documentos/2_M2_oca/Projet/voice_recon_mini_V2.tflite --compression none --verbosity 1 --allocate-inputs --allocate-outputs --workspace C:/Users/fabi_/AppData/Local/Temp/mxAI_workspace7520709689117008351628034246368860 --output C:/Users/fabi_/.stm32cubemx/network_output",
+        "arguments": "generate --target stm32f7 --name network -m C:/Users/fabi_/OneDrive/Documentos/2_M2_oca/Projet/voice_recon_mini_V2.tflite --compression none --verbosity 1 --workspace C:/Users/fabi_/AppData/Local/Temp/mxAI_workspace7679670348988009502440155395318925 --output C:/Users/fabi_/.stm32cubemx/network_output",
         "environment": [
           "STATS_TYPE=X-CUBE-AI"
         ],
         "input_model": {
-          "generated_time": null,
           "model_files": [
             {
               "name": "voice_recon_mini_V2.tflite",
@@ -530,7 +469,7 @@
           "type": "tflite"
         },
         "name": "ST.EdgeAI.Core",
-        "version": "1.0.0-19894"
+        "version": "2.0.0-20049"
       }
     ]
   },
@@ -538,9 +477,8 @@
     {
       "edges": [
         {
-          "attributes": null,
           "buffer": 83,
-          "edge_kind": 3,
+          "edge_kind": "EDGE_MEMORY",
           "end": {
             "node_id": 10,
             "port": 0
@@ -553,9 +491,8 @@
           }
         },
         {
-          "attributes": null,
           "buffer": 85,
-          "edge_kind": 3,
+          "edge_kind": "EDGE_MEMORY",
           "end": {
             "node_id": 11,
             "port": 0
@@ -568,9 +505,8 @@
           }
         },
         {
-          "attributes": null,
           "buffer": 87,
-          "edge_kind": 3,
+          "edge_kind": "EDGE_MEMORY",
           "end": {
             "node_id": 12,
             "port": 0
@@ -583,9 +519,8 @@
           }
         },
         {
-          "attributes": null,
           "buffer": 89,
-          "edge_kind": 3,
+          "edge_kind": "EDGE_MEMORY",
           "end": {
             "node_id": 13,
             "port": 0
@@ -598,13 +533,6 @@
           }
         }
       ],
-      "exec_time": {
-        "counters": [],
-        "cycles": null,
-        "cycles_by_macc": null,
-        "duration_ms": null,
-        "percentage": null
-      },
       "id": 0,
       "inputs": [
         81
@@ -615,24 +543,17 @@
           "attributes": {
             "align": "False",
             "center": "True",
-            "mode": "bilinear",
+            "mode": "upsample_bilinear",
             "scales": "{H: 0.22580645161290322, W: 0.21705426356589147, CH: 1.0, BATCH: 1.0}"
           },
-          "description": "Upsample",
-          "exec_time": {
-            "counters": [],
-            "cycles": null,
-            "cycles_by_macc": null,
-            "duration_ms": null,
-            "percentage": null
-          },
+          "description": "Resize",
           "id": 9,
           "inputs": [
             81
           ],
           "macc": 3136,
           "mapping": "NODE_SW",
-          "name": "upsample_0",
+          "name": "resize_0",
           "original_nodes": [
             "0"
           ],
@@ -664,13 +585,6 @@
             "weights_prefetch": "True"
           },
           "description": "Conv2D",
-          "exec_time": {
-            "counters": [],
-            "cycles": null,
-            "cycles_by_macc": null,
-            "duration_ms": null,
-            "percentage": null
-          },
           "id": 10,
           "inputs": [
             83,
@@ -701,13 +615,6 @@
             "use_bias": "True"
           },
           "description": "Dense",
-          "exec_time": {
-            "counters": [],
-            "cycles": null,
-            "cycles_by_macc": null,
-            "duration_ms": null,
-            "percentage": null
-          },
           "id": 11,
           "inputs": [
             85,
@@ -734,13 +641,6 @@
             "nonlinearity": "relu"
           },
           "description": "Nonlinearity",
-          "exec_time": {
-            "counters": [],
-            "cycles": null,
-            "cycles_by_macc": null,
-            "duration_ms": null,
-            "percentage": null
-          },
           "id": 12,
           "inputs": [
             87
@@ -766,13 +666,6 @@
             "use_bias": "True"
           },
           "description": "Dense",
-          "exec_time": {
-            "counters": [],
-            "cycles": null,
-            "cycles_by_macc": null,
-            "duration_ms": null,
-            "percentage": null
-          },
           "id": 13,
           "inputs": [
             89,
@@ -817,7 +710,6 @@
     }
   ],
   "json_schema_version": "2.0",
-  "memory_accesses": [],
   "memory_footprint": {
     "activations": 67120,
     "io": [
@@ -851,12 +743,10 @@
         119,
         123
       ],
-      "cacheable": null,
       "id": 0,
       "name": "heap_overlay_pool",
       "offset_start": 0,
       "persistent": false,
-      "pipelined": null,
       "rights": "ACC_WRITE",
       "size_bytes": -1,
       "subpools": [],
@@ -865,7 +755,7 @@
       "virtual": false
     },
     {
-      "address": "NULL",
+      "address": "s_network_weights_array_u64",
       "alignment": 0,
       "attributes": {
         "latency": "UNDEF",
@@ -880,12 +770,10 @@
         105,
         108
       ],
-      "cacheable": null,
       "id": 1,
       "name": "weights_array",
       "offset_start": 0,
       "persistent": true,
-      "pipelined": null,
       "rights": "ACC_READ",
       "size_bytes": -1,
       "subpools": [],
@@ -893,11 +781,5 @@
       "user_allocated": false,
       "virtual": false
     }
-  ],
-  "power_estimates": [],
-  "validation": {
-    "val_error": null,
-    "val_error_desc": null,
-    "val_metrics": []
-  }
+  ]
 }

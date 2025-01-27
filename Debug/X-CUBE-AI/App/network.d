@@ -54,6 +54,7 @@ X-CUBE-AI/App/network.o: ../X-CUBE-AI/App/network.c \
  ../Middlewares/ST/AI/Inc/layers_upsample.h \
  ../Middlewares/ST/AI/Inc/layers_resize.h \
  ../Middlewares/ST/AI/Inc/layers_argminmax.h \
+ ../Middlewares/ST/AI/Inc/layers_wrappers.h \
  ../Middlewares/ST/AI/Inc/ai_math_helpers.h
 ../X-CUBE-AI/App/network.h:
 ../X-CUBE-AI/App/network_config.h:
@@ -114,4 +115,5 @@ X-CUBE-AI/App/network.o: ../X-CUBE-AI/App/network.c \
 ../Middlewares/ST/AI/Inc/layers_upsample.h:
 ../Middlewares/ST/AI/Inc/layers_resize.h:
 ../Middlewares/ST/AI/Inc/layers_argminmax.h:
+../Middlewares/ST/AI/Inc/layers_wrappers.h:
 ../Middlewares/ST/AI/Inc/ai_math_helpers.h:
