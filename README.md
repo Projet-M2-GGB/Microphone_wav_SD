@@ -71,6 +71,7 @@ Creates a new log file on the SD card and writes content to it.
 9. check_button_release()
 
 Checks for the button press and resets the button_pressed flag when the button is released.
+
 Workflow
 
     SD Card Initialization: The system initializes the SD card and formats it if necessary.
@@ -96,6 +97,3 @@ Troubleshooting
     Audio Processing Errors: If preprocessing fails, verify the WAV file format (16kHz, mono, 16-bit).
     AI Model Errors: If the AI model initialization fails, check that the weights and activation buffers are correctly loaded.
 
-License
-
-This project is licensed under the terms of the STM32 software license. For details, please refer to the LICENSE file.
