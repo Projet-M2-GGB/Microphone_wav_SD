@@ -29,9 +29,7 @@ Software Requirements
 Setup Instructions
 
     Hardware Setup:
-        Connect the microphone to the STM32 board for audio input.
         Insert an SD card into the STM32 board.
-        Connect an LED and button to appropriate GPIO pins on the STM32.
     Software Setup:
         Clone the repository and open the project in STM32CubeIDE.
         Build and flash the program to the STM32 microcontroller.
@@ -41,27 +39,35 @@ Key Functions
 1. AI_Init()
 
 Initializes the AI model by loading weights and biases, and setting up the input and output buffers.
+
 2. AI_Process()
 
 Takes in processed audio data, runs it through the AI model, and returns the predicted activity.
+
 3. ReadWAVFileInfo()
 
 Reads the WAV file header to gather metadata about the audio file (e.g., sample rate, number of channels).
+
 4. normalize_audio()
 
 Normalizes the audio data to prepare it for AI processing.
+
 5. apply_fft()
 
 Applies Fast Fourier Transform (FFT) to the audio data to extract frequency-domain features.
+
 6. calculate_mel_spectrogram()
 
 Computes the Mel spectrogram from the FFT output, which is used as input for the AI model.
+
 7. SDCard_InitAndFormat()
 
 Initializes and formats the SD card, preparing it for file storage.
+
 8. new_log()
 
 Creates a new log file on the SD card and writes content to it.
+
 9. check_button_release()
 
 Checks for the button press and resets the button_pressed flag when the button is released.
