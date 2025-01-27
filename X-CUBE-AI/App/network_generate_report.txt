@@ -1,30 +1,30 @@
 ST Edge AI Core v1.0.0-19894
-Created date          : 2025-01-10 11:28:23
-Parameters            : generate --target stm32f7 --name network -m C:/Users/fabi_/OneDrive/Documentos/2_M2_oca/Projet/voice_recon_mini_V2.tflite --compression none --verbosity 1 --allocate-inputs --allocate-outputs --workspace C:/Users/fabi_/AppData/Local/Temp/mxAI_workspace21363432886675006770889514928081033 --output C:/Users/fabi_/.stm32cubemx/network_output
+Created date          : 2025-01-27 10:00:32
+Parameters            : generate --target stm32f7 --name network -m C:/Users/fabi_/OneDrive/Documentos/2_M2_oca/Projet/voice_recon_mini_V2.tflite --compression none --verbosity 1 --allocate-inputs --allocate-outputs --workspace C:/Users/fabi_/AppData/Local/Temp/mxAI_workspace7501923870935009251870836778591126 --output C:/Users/fabi_/.stm32cubemx/network_output
 
 Exec/report summary (generate)
--------------------------------------------------------------------------------------------------------------
-model file         :   C:\Users\fabi_\OneDrive\Documentos\2_M2_oca\Projet\voice_recon_mini_V2.tflite         
-type               :   tflite                                                                                
-c_name             :   network                                                                               
-compression        :   none                                                                                  
-options            :   allocate-inputs, allocate-outputs                                                     
-optimization       :   balanced                                                                              
-target/series      :   stm32f7                                                                               
-workspace dir      :   C:\Users\fabi_\AppData\Local\Temp\mxAI_workspace21363432886675006770889514928081033   
-output dir         :   C:\Users\fabi_\.stm32cubemx\network_output                                            
-model_fmt          :   float                                                                                 
-model_name         :   voice_recon_mini_V2                                                                   
-model_hash         :   0x1a28928bd6f7ce9abfac4bb38de56539                                                    
-params #           :   173,670 items (678.40 KiB)                                                            
--------------------------------------------------------------------------------------------------------------
-input 1/1          :   'serving_default_keras_tensor0', f32(1x124x129x1), 62.48 KBytes, activations          
-output 1/1         :   'gemm_5', f32(1x6), 24 Bytes, activations                                             
-macc               :   295,702                                                                               
-weights (ro)       :   694,680 B (678.40 KiB) (1 segment)                                                    
-activations (rw)   :   67,120 B (65.55 KiB) (1 segment) *                                                    
-ram (total)        :   67,120 B (65.55 KiB) = 67,120 + 0 + 0                                                 
--------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------
+model file         :   C:\Users\fabi_\OneDrive\Documentos\2_M2_oca\Projet\voice_recon_mini_V2.tflite        
+type               :   tflite                                                                               
+c_name             :   network                                                                              
+compression        :   none                                                                                 
+options            :   allocate-inputs, allocate-outputs                                                    
+optimization       :   balanced                                                                             
+target/series      :   stm32f7                                                                              
+workspace dir      :   C:\Users\fabi_\AppData\Local\Temp\mxAI_workspace7501923870935009251870836778591126   
+output dir         :   C:\Users\fabi_\.stm32cubemx\network_output                                           
+model_fmt          :   float                                                                                
+model_name         :   voice_recon_mini_V2                                                                  
+model_hash         :   0x1a28928bd6f7ce9abfac4bb38de56539                                                   
+params #           :   173,670 items (678.40 KiB)                                                           
+------------------------------------------------------------------------------------------------------------
+input 1/1          :   'serving_default_keras_tensor0', f32(1x124x129x1), 62.48 KBytes, activations         
+output 1/1         :   'gemm_5', f32(1x6), 24 Bytes, activations                                            
+macc               :   295,702                                                                              
+weights (ro)       :   694,680 B (678.40 KiB) (1 segment)                                                   
+activations (rw)   :   67,120 B (65.55 KiB) (1 segment) *                                                   
+ram (total)        :   67,120 B (65.55 KiB) = 67,120 + 0 + 0                                                
+------------------------------------------------------------------------------------------------------------
 (*) 'input'/'output' buffers can be used from the activations buffer
 
 Model name - voice_recon_mini_V2

@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "crc.h"
 #include "dma.h"
 #include "fatfs.h"
 #include "sai.h"
@@ -275,6 +276,8 @@ int main(void)
   MX_USART1_UART_Init();
   MX_FATFS_Init();
   MX_SDMMC1_SD_Init();
+  MX_CRC_Init();
+  __HAL_RCC_CRC_CLK_ENABLE();
   /* USER CODE BEGIN 2 */
 
   /* We format the SD card */
@@ -288,64 +291,65 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   uint32_t write_index = 0; // AI stuff
-  while (1)
-  {
-      check_button_release();
-      printf("Waiting for input to record...\r\n");
-      HAL_Delay(1000);
+    while (1)
+    {
+        check_button_release();
+        printf("Waiting for input to record...\r\n");
+        HAL_Delay(1000);
+      /* USER CODE END WHILE */
 
-      if (button_pressed == 1)
-      {
-          /* Toggle the green led to visually show action */
-          HAL_GPIO_TogglePin(USR_LED_GPIO_Port, USR_LED_Pin);
-          HAL_Delay(100);
-          HAL_GPIO_TogglePin(USR_LED_GPIO_Port, USR_LED_Pin);
-          HAL_Delay(100);
+        if (button_pressed == 1)
+        {
+            /* Toggle the green led to visually show action */
+            HAL_GPIO_TogglePin(USR_LED_GPIO_Port, USR_LED_Pin);
+            HAL_Delay(100);
+            HAL_GPIO_TogglePin(USR_LED_GPIO_Port, USR_LED_Pin);
+            HAL_Delay(100);
 
-          /* If the program is not already recording... */
-          if (AudioState == AUDIO_STATE_IDLE)
-          {
-              /* Configure the audio recorder: sampling frequency, bits-depth, number of channels */
-              AUDIO_REC_Start();
-          }
+            /* If the program is not already recording... */
+            if (AudioState == AUDIO_STATE_IDLE)
+            {
+                /* Configure the audio recorder: sampling frequency, bits-depth, number of channels */
+                AUDIO_REC_Start();
+            }
 
-          /* While recording, we loop the recording process */
-          while (AudioState == AUDIO_STATE_RECORD)
-          {
-              status = AUDIO_REC_Process();
-          }
+            /* While recording, we loop the recording process */
+            while (AudioState == AUDIO_STATE_RECORD)
+            {
+                status = AUDIO_REC_Process();
+            }
 
-          /* Once we stop recording, we correctly close the .WAV */
-          if (AudioState == AUDIO_STATE_STOP)
-          {
-              status = AUDIO_REC_Process();
-              printf("Recording stopped.\r\n");
-          }
+            /* Once we stop recording, we correctly close the .WAV */
+            if (AudioState == AUDIO_STATE_STOP)
+            {
+                status = AUDIO_REC_Process();
+                printf("Recording stopped.\r\n");
+            }
 
-          ReadWAVFileInfo("WAVE.wav");
+            ReadWAVFileInfo("WAVE.wav");
 
-//          // Process the WAV file for AI inference
-//          if (status == 0)  // Ensure the WAV file was properly processed
-//          {
-//              int ret = preprocess_wav_data(in_data);
-//              if (ret == 0)  // Check if preprocessing was successful
-//              {
-//                  // Run inference on the preprocessed data
-//                  int activity_index = AI_Process(in_data);
-//                  printf("Predicted activity: %s\r\n", activities[activity_index]);
-//              }
-//              else
-//              {
-//                  printf("Error: WAV file preprocessing failed.\r\n");
-//              }
-//          }
-//          else
-//          {
-//              printf("Error: WAV file info reading failed.\r\n");
-//          }
-      }
+            // Process the WAV file for AI inference
+            if (status == 0)  // Ensure the WAV file was properly processed
+            {
+                int ret = preprocess_wav_data(in_data);
+                if (ret == 0)  // Check if preprocessing was successful
+                {
+                    // Run inference on the preprocessed data
+                    int activity_index = AI_Process(in_data);
+                    printf("Predicted activity: %s\r\n", activities[activity_index]);
+                }
+                else
+                {
+                    printf("Error: WAV file preprocessing failed.\r\n");
+                }
+            }
+            else
+            {
+                printf("Error: WAV file info reading failed.\r\n");
+            }
+        }
 
-      HAL_Delay(100);  // Small delay for stability
+        HAL_Delay(100);  // Small delay for stability
   }
   /* USER CODE END 3 */
 }
@@ -615,11 +619,11 @@ int read_wav_file(const char *filename, int16_t *audio_buffer, uint32_t *num_sam
     }
 
     // Check if WAV file has the correct format
-    if (header.SampleRate != WAV_SAMPLE_RATE || header.BitsPerSample != 16 || header.NumChannels != 1) {
-        printf("Error: Unsupported WAV format.\r\n");
-        f_close(&wav_file);
-        return -3;
-    }
+//    if (header.SampleRate != WAV_SAMPLE_RATE || header.BitsPerSample != 16 || header.NumChannels != 1) {
+//        printf("Error: Unsupported WAV format.\r\n");
+//        f_close(&wav_file);
+//        return -3;
+//    }
 
     // Read audio samples in chunks and process
     if (f_read(&wav_file, audio_buffer, sizeof(int16_t) * FFT_SIZE, &bytes_read) != FR_OK) {
