@@ -4,7 +4,7 @@
 ../Core/Src/main.c:280:6:HAL_GPIO_EXTI_Callback	3
 ../Core/Src/main.c:295:6:check_button_release	2
 ../Core/Src/main.c:303:6:SDCard_InitAndFormat	4
-../Core/Src/main.c:335:6:new_log	4
-../Core/Src/main.c:360:6:new_folder	2
-../Core/Src/main.c:374:6:ReadWAVFileInfo	5
-../Core/Src/main.c:427:6:Error_Handler	1
+../Core/Src/main.c:337:6:new_log	4
+../Core/Src/main.c:362:6:new_folder	2
+../Core/Src/main.c:376:6:ReadWAVFileInfo	5
+../Core/Src/main.c:429:6:Error_Handler	1
