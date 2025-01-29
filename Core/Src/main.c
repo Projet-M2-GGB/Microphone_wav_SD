@@ -32,12 +32,12 @@
 #include <stdio.h>
 
 
-#include "ai_datatypes_defines.h"
-#include "ai_platform.h"
-#include "network.h"
-#include "network_data.h"
-
-#include "arm_math.h"  // For DSP functions like FFT
+//#include "ai_datatypes_defines.h"
+//#include "ai_platform.h"
+//#include "network.h"
+//#include "network_data.h"
+//
+//#include "arm_math.h"  // For DSP functions like FFT
 
 /* USER CODE END Includes */
 
@@ -132,15 +132,15 @@ void new_folder(const char *foldername);
 void ReadWAVFileInfo(const char *filename);
 void ReadWAVFileInfo_fromSD(const char *filename);
 
-void AI_Init(void);
-int AI_Process(const float* input_data);
-
-int read_wav_file(const char *filename, int16_t *audio_buffer, uint32_t *num_samples);
-void normalize_audio(int16_t *audio_data, uint32_t num_samples, float *normalized_buffer);
-void apply_fft(float *normalized_buffer, float *fft_output, uint32_t fft_size);
-void calculate_mel_spectrogram(float *fft_output, float *mel_spectrogram, uint32_t fft_size, uint32_t num_mel_bins);
-void prepare_ai_model_input(float *mel_spectrogram, float *model_input_buffer, uint32_t num_mel_bins, uint32_t ai_input_size);
-int preprocess_wav_data(float *input_buffer);
+//void AI_Init(void);
+//int AI_Process(const float* input_data);
+//
+//int read_wav_file(const char *filename, int16_t *audio_buffer, uint32_t *num_samples);
+//void normalize_audio(int16_t *audio_data, uint32_t num_samples, float *normalized_buffer);
+//void apply_fft(float *normalized_buffer, float *fft_output, uint32_t fft_size);
+//void calculate_mel_spectrogram(float *fft_output, float *mel_spectrogram, uint32_t fft_size, uint32_t num_mel_bins);
+//void prepare_ai_model_input(float *mel_spectrogram, float *model_input_buffer, uint32_t num_mel_bins, uint32_t ai_input_size);
+//int preprocess_wav_data(float *input_buffer);
 
 /* USER CODE END PFP */
 
@@ -157,92 +157,92 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	char buf[50];
-	int buf_len = 0;
-	uint32_t timestamp;
-	float y_val;
-
-	const char* activities[AI_NETWORK_OUT_1_SIZE] = {
-	    "down", "go", "left", "right", "stop", "up"
-	};
-
-	// Buffers for input and output data
-	AI_ALIGNED(4) float in_data[AI_NETWORK_IN_1_SIZE];
-	AI_ALIGNED(4) float out_data[AI_NETWORK_OUT_1_SIZE];
-
-	// Chunk of memory used to hold intermediate values for the neural network
-	AI_ALIGNED(4) ai_u8 activations[AI_NETWORK_DATA_ACTIVATIONS_SIZE];
-
-	// Neural network handle
-	ai_handle network = AI_HANDLE_NULL;
-
-	// Wrapper structs for input and output buffers
-	ai_buffer ai_input[AI_NETWORK_IN_NUM];
-	ai_buffer ai_output[AI_NETWORK_OUT_NUM];
-
-	/**
-	 * @brief Initialize the AI model
-	 */
-	void AI_Init(void) {
-	    ai_error ai_err;
-
-	    // Set working memory and get weights/biases from the model
-	    ai_network_params ai_params = {
-	        AI_NETWORK_DATA_WEIGHTS(ai_network_data_weights_get()),
-	        AI_NETWORK_DATA_ACTIVATIONS(activations)
-	    };
-
-	    // Create and initialize the network
-	    ai_err = ai_network_create(&network, AI_NETWORK_DATA_CONFIG);
-	    if (ai_err.type != AI_ERROR_NONE) {
-	        printf("AI network creation failed: type=%d, code=%d\r\n", ai_err.type, ai_err.code);
-	        Error_Handler();
-	    }
-
-	    if (!ai_network_init(network, &ai_params)) {
-	        ai_err = ai_network_get_error(network);
-	        printf("AI network initialization failed: type=%d, code=%d\r\n", ai_err.type, ai_err.code);
-	        Error_Handler();
-	    }
-
-	    // Retrieve input and output buffer structures dynamically
-	    ai_network_inputs_get(network, ai_input);
-	    ai_network_outputs_get(network, ai_output);
-
-	    printf("AI model initialized successfully.\r\n");
-	}
-
-
-	/**
-	 * @brief Process the AI model
-	 * @param input_data Pointer to input data buffer
-	 * @return Index of the predicted activity
-	 */
-	int AI_Process(const float* input_data) {
-	    // Copy input data to in_data buffer
-	    memcpy(in_data, input_data, sizeof(in_data));
-
-	    // Run the AI model
-	    ai_i32 nbatch = ai_network_run(network, ai_input, ai_output);
-	    if (nbatch != 1) {
-	        ai_error ai_err = ai_network_get_error(network);
-	        printf("AI model inference failed: type=%d, code=%d\r\n", ai_err.type, ai_err.code);
-	        Error_Handler();
-	    }
-
-	    // Find the index of the predicted activity
-	    float max_val = out_data[0];
-	    int max_idx = 0;
-	    for (int i = 1; i < AI_NETWORK_OUT_1_SIZE; i++) {
-	        if (out_data[i] > max_val) {
-	            max_val = out_data[i];
-	            max_idx = i;
-	        }
-	    }
-
-	    printf("Predicted activity: %s (confidence: %.2f)\r\n", activities[max_idx], max_val);
-	    return max_idx;
-	}
+//	char buf[50];
+//	int buf_len = 0;
+//	uint32_t timestamp;
+//	float y_val;
+//
+//	const char* activities[AI_NETWORK_OUT_1_SIZE] = {
+//	    "down", "go", "left", "right", "stop", "up"
+//	};
+//
+//	// Buffers for input and output data
+//	AI_ALIGNED(4) float in_data[AI_NETWORK_IN_1_SIZE];
+//	AI_ALIGNED(4) float out_data[AI_NETWORK_OUT_1_SIZE];
+//
+//	// Chunk of memory used to hold intermediate values for the neural network
+//	AI_ALIGNED(4) ai_u8 activations[AI_NETWORK_DATA_ACTIVATIONS_SIZE];
+//
+//	// Neural network handle
+//	ai_handle network = AI_HANDLE_NULL;
+//
+//	// Wrapper structs for input and output buffers
+//	ai_buffer ai_input[AI_NETWORK_IN_NUM];
+//	ai_buffer ai_output[AI_NETWORK_OUT_NUM];
+//
+//	/**
+//	 * @brief Initialize the AI model
+//	 */
+//	void AI_Init(void) {
+//	    ai_error ai_err;
+//
+//	    // Set working memory and get weights/biases from the model
+//	    ai_network_params ai_params = {
+//	        AI_NETWORK_DATA_WEIGHTS(ai_network_data_weights_get()),
+//	        AI_NETWORK_DATA_ACTIVATIONS(activations)
+//	    };
+//
+//	    // Create and initialize the network
+//	    ai_err = ai_network_create(&network, AI_NETWORK_DATA_CONFIG);
+//	    if (ai_err.type != AI_ERROR_NONE) {
+//	        printf("AI network creation failed: type=%d, code=%d\r\n", ai_err.type, ai_err.code);
+//	        Error_Handler();
+//	    }
+//
+//	    if (!ai_network_init(network, &ai_params)) {
+//	        ai_err = ai_network_get_error(network);
+//	        printf("AI network initialization failed: type=%d, code=%d\r\n", ai_err.type, ai_err.code);
+//	        Error_Handler();
+//	    }
+//
+//	    // Retrieve input and output buffer structures dynamically
+//	    ai_network_inputs_get(network, ai_input);
+//	    ai_network_outputs_get(network, ai_output);
+//
+//	    printf("AI model initialized successfully.\r\n");
+//	}
+//
+//
+//	/**
+//	 * @brief Process the AI model
+//	 * @param input_data Pointer to input data buffer
+//	 * @return Index of the predicted activity
+//	 */
+//	int AI_Process(const float* input_data) {
+//	    // Copy input data to in_data buffer
+//	    memcpy(in_data, input_data, sizeof(in_data));
+//
+//	    // Run the AI model
+//	    ai_i32 nbatch = ai_network_run(network, ai_input, ai_output);
+//	    if (nbatch != 1) {
+//	        ai_error ai_err = ai_network_get_error(network);
+//	        printf("AI model inference failed: type=%d, code=%d\r\n", ai_err.type, ai_err.code);
+//	        Error_Handler();
+//	    }
+//
+//	    // Find the index of the predicted activity
+//	    float max_val = out_data[0];
+//	    int max_idx = 0;
+//	    for (int i = 1; i < AI_NETWORK_OUT_1_SIZE; i++) {
+//	        if (out_data[i] > max_val) {
+//	            max_val = out_data[i];
+//	            max_idx = i;
+//	        }
+//	    }
+//
+//	    printf("Predicted activity: %s (confidence: %.2f)\r\n", activities[max_idx], max_val);
+//	    return max_idx;
+//	}
   /* USER CODE END 1 */
 
   /* Enable the CPU Cache */
@@ -283,7 +283,7 @@ int main(void)
   printf("SD card init...\r\n");
   SDCard_InitAndFormat();
 
-  AI_Init();
+  //AI_Init();
 
   /* USER CODE END 2 */
 
@@ -328,24 +328,24 @@ int main(void)
             ReadWAVFileInfo("WAVE.wav");
 
             // Process the WAV file for AI inference
-            if (status == 0)  // Ensure the WAV file was properly processed
-            {
-                int ret = preprocess_wav_data(in_data);
-                if (ret == 0)  // Check if preprocessing was successful
-                {
-                    // Run inference on the preprocessed data
-                    int activity_index = AI_Process(in_data);
-                    printf("Predicted activity: %s\r\n", activities[activity_index]);
-                }
-                else
-                {
-                    printf("Error: WAV file preprocessing failed.\r\n");
-                }
-            }
-            else
-            {
-                printf("Error: WAV file info reading failed.\r\n");
-            }
+//            if (status == 0)  // Ensure the WAV file was properly processed
+//            {
+//                int ret = preprocess_wav_data(in_data);
+//                if (ret == 0)  // Check if preprocessing was successful
+//                {
+//                    // Run inference on the preprocessed data
+//                    int activity_index = AI_Process(in_data);
+//                    printf("Predicted activity: %s\r\n", activities[activity_index]);
+//                }
+//                else
+//                {
+//                    printf("Error: WAV file preprocessing failed.\r\n");
+//                }
+//            }
+//            else
+//            {
+//                printf("Error: WAV file info reading failed.\r\n");
+//            }
         }
 
         HAL_Delay(100);  // Small delay for stability
@@ -353,9 +353,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-}
-  /* USER CODE END 3 */
 
+  /* USER CODE END 3 */
+}
 
 /**
   * @brief System Clock Configuration
@@ -603,108 +603,108 @@ void ReadWAVFileInfo(const char *filename) {
 }
 /* ======================================================== */
 
-int read_wav_file(const char *filename, int16_t *audio_buffer, uint32_t *num_samples) {
-    FIL wav_file;
-    WAV_Header header;
-    UINT bytes_read;
-
-    // Open the WAV file
-    if (f_open(&wav_file, filename, FA_READ) != FR_OK) {
-        printf("Error: Unable to open WAV file.\r\n");
-        return -1;
-    }
-
-    // Read WAV header
-    if (f_read(&wav_file, &header, sizeof(WAV_Header), &bytes_read) != FR_OK) {
-        printf("Error: Unable to read WAV header.\r\n");
-        f_close(&wav_file);
-        return -2;
-    }
-
-    // Check if WAV file has the correct format
-//    if (header.SampleRate != WAV_SAMPLE_RATE || header.BitsPerSample != 16 || header.NumChannels != 1) {
-//        printf("Error: Unsupported WAV format.\r\n");
-//        f_close(&wav_file);
-//        return -3;
+//int read_wav_file(const char *filename, int16_t *audio_buffer, uint32_t *num_samples) {
+//    FIL wav_file;
+//    WAV_Header header;
+//    UINT bytes_read;
+//
+//    // Open the WAV file
+//    if (f_open(&wav_file, filename, FA_READ) != FR_OK) {
+//        printf("Error: Unable to open WAV file.\r\n");
+//        return -1;
 //    }
-
-    // Read audio samples in chunks and process
-    if (f_read(&wav_file, audio_buffer, sizeof(int16_t) * FFT_SIZE, &bytes_read) != FR_OK) {
-        printf("Error: Unable to read audio data.\r\n");
-        f_close(&wav_file);
-        return -4;
-    }
-
-    *num_samples = bytes_read / sizeof(int16_t);
-
-    f_close(&wav_file);
-    return 0;
-}
-
-
-void normalize_audio(int16_t *audio_data, uint32_t num_samples, float *normalized_buffer) {
-    for (uint32_t i = 0; i < num_samples; i++) {
-        normalized_buffer[i] = (float)audio_data[i] / 32768.0f;  // Normalize to [-1, 1]
-    }
-}
-
-void apply_fft(float *normalized_buffer, float *fft_output, uint32_t fft_size) {
-    arm_rfft_fast_instance_f32 fft_instance;
-    arm_rfft_fast_init_f32(&fft_instance, fft_size);
-    arm_rfft_fast_f32(&fft_instance, normalized_buffer, fft_output, 0);
-
-    // Convert FFT output to magnitude
-    for (uint32_t i = 0; i < fft_size / 2; i++) {
-        fft_output[i] = sqrtf(fft_output[i] * fft_output[i]);
-    }
-}
-
-
-void calculate_mel_spectrogram(float *fft_output, float *mel_spectrogram, uint32_t fft_size, uint32_t num_mel_bins) {
-    // Your Mel filterbank coefficients should be defined or loaded here
-    // Apply Mel filterbank to the FFT output
-    for (uint32_t i = 0; i < num_mel_bins; i++) {
-        mel_spectrogram[i] = 0.0f;  // Replace this with actual calculation based on filterbank
-    }
-}
-
-
-void prepare_ai_model_input(float *mel_spectrogram, float *model_input_buffer, uint32_t num_mel_bins, uint32_t ai_input_size) {
-    for (uint32_t i = 0; i < ai_input_size; i++) {
-        if (i < num_mel_bins) {
-            model_input_buffer[i] = mel_spectrogram[i];
-        } else {
-            model_input_buffer[i] = 0.0f;  // Pad with zeros or other initialization if needed
-        }
-    }
-}
-
-int preprocess_wav_data(float *input_buffer) {
-    int16_t audio_buffer[FFT_SIZE];
-    float normalized_buffer[FFT_SIZE];
-    float fft_output[FFT_SIZE];
-    float mel_spectrogram[NUM_MEL_BINS];
-    uint32_t num_samples;
-
-    // Step 1: Read the WAV file and get audio samples
-    if (read_wav_file("WAVE.wav", audio_buffer, &num_samples) != 0) {
-        return -1;
-    }
-
-    // Step 2: Normalize audio data to [-1, 1]
-    normalize_audio(audio_buffer, num_samples, normalized_buffer);
-
-    // Step 3: Apply FFT to the normalized audio data
-    apply_fft(normalized_buffer, fft_output, FFT_SIZE);
-
-    // Step 4: Convert FFT output to Mel spectrogram
-    calculate_mel_spectrogram(fft_output, mel_spectrogram, FFT_SIZE / 2, NUM_MEL_BINS);
-
-    // Step 5: Prepare the AI model input buffer with Mel spectrogram
-    prepare_ai_model_input(mel_spectrogram, input_buffer, NUM_MEL_BINS, AI_NETWORK_IN_1_SIZE);
-
-    return 0;
-}
+//
+//    // Read WAV header
+//    if (f_read(&wav_file, &header, sizeof(WAV_Header), &bytes_read) != FR_OK) {
+//        printf("Error: Unable to read WAV header.\r\n");
+//        f_close(&wav_file);
+//        return -2;
+//    }
+//
+//    // Check if WAV file has the correct format
+////    if (header.SampleRate != WAV_SAMPLE_RATE || header.BitsPerSample != 16 || header.NumChannels != 1) {
+////        printf("Error: Unsupported WAV format.\r\n");
+////        f_close(&wav_file);
+////        return -3;
+////    }
+//
+//    // Read audio samples in chunks and process
+//    if (f_read(&wav_file, audio_buffer, sizeof(int16_t) * FFT_SIZE, &bytes_read) != FR_OK) {
+//        printf("Error: Unable to read audio data.\r\n");
+//        f_close(&wav_file);
+//        return -4;
+//    }
+//
+//    *num_samples = bytes_read / sizeof(int16_t);
+//
+//    f_close(&wav_file);
+//    return 0;
+//}
+//
+//
+//void normalize_audio(int16_t *audio_data, uint32_t num_samples, float *normalized_buffer) {
+//    for (uint32_t i = 0; i < num_samples; i++) {
+//        normalized_buffer[i] = (float)audio_data[i] / 32768.0f;  // Normalize to [-1, 1]
+//    }
+//}
+//
+//void apply_fft(float *normalized_buffer, float *fft_output, uint32_t fft_size) {
+//    arm_rfft_fast_instance_f32 fft_instance;
+//    arm_rfft_fast_init_f32(&fft_instance, fft_size);
+//    arm_rfft_fast_f32(&fft_instance, normalized_buffer, fft_output, 0);
+//
+//    // Convert FFT output to magnitude
+//    for (uint32_t i = 0; i < fft_size / 2; i++) {
+//        fft_output[i] = sqrtf(fft_output[i] * fft_output[i]);
+//    }
+//}
+//
+//
+//void calculate_mel_spectrogram(float *fft_output, float *mel_spectrogram, uint32_t fft_size, uint32_t num_mel_bins) {
+//    // Your Mel filterbank coefficients should be defined or loaded here
+//    // Apply Mel filterbank to the FFT output
+//    for (uint32_t i = 0; i < num_mel_bins; i++) {
+//        mel_spectrogram[i] = 0.0f;  // Replace this with actual calculation based on filterbank
+//    }
+//}
+//
+//
+//void prepare_ai_model_input(float *mel_spectrogram, float *model_input_buffer, uint32_t num_mel_bins, uint32_t ai_input_size) {
+//    for (uint32_t i = 0; i < ai_input_size; i++) {
+//        if (i < num_mel_bins) {
+//            model_input_buffer[i] = mel_spectrogram[i];
+//        } else {
+//            model_input_buffer[i] = 0.0f;  // Pad with zeros or other initialization if needed
+//        }
+//    }
+//}
+//
+//int preprocess_wav_data(float *input_buffer) {
+//    int16_t audio_buffer[FFT_SIZE];
+//    float normalized_buffer[FFT_SIZE];
+//    float fft_output[FFT_SIZE];
+//    float mel_spectrogram[NUM_MEL_BINS];
+//    uint32_t num_samples;
+//
+//    // Step 1: Read the WAV file and get audio samples
+//    if (read_wav_file("WAVE.wav", audio_buffer, &num_samples) != 0) {
+//        return -1;
+//    }
+//
+//    // Step 2: Normalize audio data to [-1, 1]
+//    normalize_audio(audio_buffer, num_samples, normalized_buffer);
+//
+//    // Step 3: Apply FFT to the normalized audio data
+//    apply_fft(normalized_buffer, fft_output, FFT_SIZE);
+//
+//    // Step 4: Convert FFT output to Mel spectrogram
+//    calculate_mel_spectrogram(fft_output, mel_spectrogram, FFT_SIZE / 2, NUM_MEL_BINS);
+//
+//    // Step 5: Prepare the AI model input buffer with Mel spectrogram
+//    prepare_ai_model_input(mel_spectrogram, input_buffer, NUM_MEL_BINS, AI_NETWORK_IN_1_SIZE);
+//
+//    return 0;
+//}
 
 
 
