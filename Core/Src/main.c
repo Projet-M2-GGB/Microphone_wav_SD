@@ -155,7 +155,7 @@ int main(void)
 
   /* We format the SD card */
   printf("SD card init...\r\n");
-  SDCard_InitAndFormat();
+  //SDCard_InitAndFormat();
 
   /* USER CODE END 2 */
 
@@ -180,25 +180,25 @@ int main(void)
 		  HAL_GPIO_TogglePin(USR_LED_GPIO_Port, USR_LED_Pin);
 		  HAL_Delay(100);
 
-		  /* If the program is not already recording... */
-		  if(AudioState == AUDIO_STATE_IDLE)
-		  {
-		    /* Configure the audio recorder: sampling frequency, bits-depth, number of channels */
-		    AUDIO_REC_Start();
-		  }
-
-		  /* While recording, we loop the recording process */
-		  while(AudioState == AUDIO_STATE_RECORD)
-		  {
-		    status = AUDIO_REC_Process();
-		  }
-
-		  /* Once we stop recording, we correctly close the .WAV */
-		  if (AudioState == AUDIO_STATE_STOP)
-		  {
-			status = AUDIO_REC_Process();
-		    printf("Recording stopped.\r\n");
-		  }
+//		  /* If the program is not already recording... */
+//		  if(AudioState == AUDIO_STATE_IDLE)
+//		  {
+//		    /* Configure the audio recorder: sampling frequency, bits-depth, number of channels */
+//		    AUDIO_REC_Start();
+//		  }
+//
+//		  /* While recording, we loop the recording process */
+//		  while(AudioState == AUDIO_STATE_RECORD)
+//		  {
+//		    status = AUDIO_REC_Process();
+//		  }
+//
+//		  /* Once we stop recording, we correctly close the .WAV */
+//		  if (AudioState == AUDIO_STATE_STOP)
+//		  {
+//			status = AUDIO_REC_Process();
+//		    printf("Recording stopped.\r\n");
+//		  }
 
 		  ReadWAVFileInfo("WAVE.wav");
 	  }
@@ -303,12 +303,14 @@ void check_button_release()
 void SDCard_InitAndFormat(void) {
     FRESULT res;
 
+    //////////////////////////////////////////////////////
     // Mount the file system
     res = f_mount(&SDFatFS, (TCHAR const *)SDPath, 0);
     if (res != FR_OK) {
         printf("Error: Failed to mount SD card (Code: %d).\r\n", res);
         Error_Handler();
     }
+    //////////////////////////////////////////////////////
 
     // Format the SD card
     res = f_mkfs((TCHAR const *)SDPath, FM_ANY, 0, workBuffer_init, sizeof(workBuffer_init));
@@ -376,6 +378,13 @@ void ReadWAVFileInfo(const char *filename) {
     WAV_Header header;      // WAV file header
     UINT bytesRead;         // Number of bytes read
     FRESULT res;
+
+    // Mount the file system
+    res = f_mount(&SDFatFS, (TCHAR const *)SDPath, 0);
+    if (res != FR_OK) {
+    	printf("Error: Failed to mount SD card (Code: %d).\r\n", res);
+        Error_Handler();
+    }
 
     // Open the WAV file
     res = f_open(&file, filename, FA_READ);
