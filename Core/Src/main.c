@@ -328,24 +328,24 @@ int main(void)
             ReadWAVFileInfo("WAVE.wav");
 
             // Process the WAV file for AI inference
-            if (status == 0)  // Ensure the WAV file was properly processed
-            {
-                int ret = preprocess_wav_data(in_data);
-                if (ret == 0)  // Check if preprocessing was successful
-                {
-                    // Run inference on the preprocessed data
-                    int activity_index = AI_Process(in_data);
-                    printf("Predicted activity: %s\r\n", activities[activity_index]);
-                }
-                else
-                {
-                    printf("Error: WAV file preprocessing failed.\r\n");
-                }
-            }
-            else
-            {
-                printf("Error: WAV file info reading failed.\r\n");
-            }
+//            if (status == 0)  // Ensure the WAV file was properly processed
+//            {
+//                int ret = preprocess_wav_data(in_data);
+//                if (ret == 0)  // Check if preprocessing was successful
+//                {
+//                    // Run inference on the preprocessed data
+//                    int activity_index = AI_Process(in_data);
+//                    printf("Predicted activity: %s\r\n", activities[activity_index]);
+//                }
+//                else
+//                {
+//                    printf("Error: WAV file preprocessing failed.\r\n");
+//                }
+//            }
+//            else
+//            {
+//                printf("Error: WAV file info reading failed.\r\n");
+//            }
         }
 
         HAL_Delay(100);  // Small delay for stability
@@ -570,6 +570,9 @@ void ReadWAVFileInfo(const char *filename) {
     UINT bytesRead;         // Number of bytes read
     FRESULT res;
 
+    SCB_DisableDCache();
+    SCB_DisableICache();
+
     // Open the WAV file
     res = f_open(&file, filename, FA_READ);
     if (res != FR_OK) {
@@ -598,6 +601,9 @@ void ReadWAVFileInfo(const char *filename) {
     printf("  Subchunk2ID: %.4s\r\n", header.Subchunk2ID);
     printf("  Subchunk2Size: %d bytes\r\n", header.Subchunk2Size);
 
+    SCB_EnableDCache();
+    SCB_EnableICache();
+
     // Close the file
     f_close(&file);
 }
@@ -622,11 +628,11 @@ int read_wav_file(const char *filename, int16_t *audio_buffer, uint32_t *num_sam
     }
 
     // Check if WAV file has the correct format
-//    if (header.SampleRate != WAV_SAMPLE_RATE || header.BitsPerSample != 16 || header.NumChannels != 1) {
-//        printf("Error: Unsupported WAV format.\r\n");
-//        f_close(&wav_file);
-//        return -3;
-//    }
+    if (header.SampleRate != WAV_SAMPLE_RATE || header.BitsPerSample != 16 || header.NumChannels != 1) {
+        printf("Error: Unsupported WAV format.\r\n");
+        f_close(&wav_file);
+        return -3;
+    }
 
     // Read audio samples in chunks and process
     if (f_read(&wav_file, audio_buffer, sizeof(int16_t) * FFT_SIZE, &bytes_read) != FR_OK) {
