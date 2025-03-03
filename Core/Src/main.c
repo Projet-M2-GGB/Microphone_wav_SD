@@ -93,15 +93,15 @@ UINT bytesRead;
 WAV_Header header;
 
 /* AI model RELATED VARIABLES */
-//ai_handle network;
-//float aiInData[AI_NETWORK_IN_1_SIZE];
-//float aiOutData[AI_NETWORK_OUT_1_SIZE];
-//ai_u8 activations[AI_NETWORK_DATA_ACTIVATIONS_SIZE];
-//const char* activities[AI_NETWORK_OUT_1_SIZE] = {
-//  "down", "go", "left", "right", "stop", "up"
-//};
-//ai_buffer * ai_input;
-//ai_buffer * ai_output;
+ai_handle network;
+float aiInData[AI_NETWORK_IN_1_SIZE];
+float aiOutData[AI_NETWORK_OUT_1_SIZE];
+ai_u8 activations[AI_NETWORK_DATA_ACTIVATIONS_SIZE];
+const char* activities[AI_NETWORK_OUT_1_SIZE] = {
+	"down", "go", "left", "right", "stop", "up"
+};
+ai_buffer * ai_input;
+ai_buffer * ai_output;
 
 /* Audio processing RELATED VARIABLES */
 static uint16_t waveform[BUFFER_SIZE];
@@ -141,12 +141,13 @@ void new_folder(const char *foldername);
 void ReadWAVFileInfo(const char *filename);
 void ReadWAVFileInfo_fromSD(const char *filename);
 
-void AI_Init(void);
-int AI_Process(const float* input_data);
-
 int read_wav_file(const char *filename, int16_t *buffer);
 
 void arm_hanning_f32(float32_t * pDst, uint32_t blockSize);
+
+static void AI_Init(void);
+static void AI_Run(float *pIn, float *pOut);
+static uint32_t argmax(const float * values, uint32_t len);
 
 /* USER CODE END PFP */
 
@@ -163,96 +164,6 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	char buf[50];
-	int buf_len = 0;
-	uint32_t timestamp;
-	float y_val;
-
-	const char* activities[AI_NETWORK_OUT_1_SIZE] = {
-	    "down", "go", "left", "right", "stop", "up"
-	};
-
-	// Buffers for input and output data
-	AI_ALIGNED(4) float in_data[AI_NETWORK_IN_1_SIZE];
-	AI_ALIGNED(4) float out_data[AI_NETWORK_OUT_1_SIZE];
-
-	// Chunk of memory used to hold intermediate values for the neural network
-	AI_ALIGNED(4) ai_u8 activations[AI_NETWORK_DATA_ACTIVATIONS_SIZE];
-
-	// Neural network handle
-	ai_handle network = AI_HANDLE_NULL;
-
-	// Wrapper structs for input and output buffers
-	ai_buffer ai_input[AI_NETWORK_IN_NUM];
-	ai_buffer ai_output[AI_NETWORK_OUT_NUM];
-
-	/**
-	 * @brief Initialize the AI model
-	 */
-	void AI_Init(void) {
-	    ai_error ai_err;
-
-	    // Set working memory and get weights/biases from the model
-	    ai_network_params ai_params = {
-	        AI_NETWORK_DATA_WEIGHTS(ai_network_data_weights_get()),
-	        AI_NETWORK_DATA_ACTIVATIONS(activations)
-	    };
-
-	    // Create and initialize the network
-	    ai_err = ai_network_create(&network, AI_NETWORK_DATA_CONFIG);
-	    if (ai_err.type != AI_ERROR_NONE) {
-	        printf("AI network creation failed: type=%d, code=%d\r\n", ai_err.type, ai_err.code);
-	        Error_Handler();
-	    }
-
-	    if (!ai_network_init(network, &ai_params)) {
-	        ai_err = ai_network_get_error(network);
-	        printf("AI network initialization failed: type=%d, code=%d\r\n", ai_err.type, ai_err.code);
-	        Error_Handler();
-	    }
-
-	    // Retrieve input and output buffer structures dynamically
-	    ai_network_inputs_get(network, ai_input);
-	    ai_network_outputs_get(network, ai_output);
-
-	    printf("AI model initialized successfully.\r\n");
-	}
-
-
-	/**
-	 * @brief Process the AI model
-	 * @param input_data Pointer to input data buffer
-	 * @return Index of the predicted activity
-	 */
-	int AI_Process(const float* input_data) {
-	    // Copy processed spectrogram (stored in waveform) to input buffer in_data
-	    // Ensure input_data matches the shape expected by the AI model (for example, AI_NETWORK_IN_1_SIZE)
-	    // Typically, you'll need to reshape or flatten your spectrogram data to match the input size of the model
-
-	    memcpy(in_data, input_data, sizeof(in_data));  // Assuming input_data is the spectrogram of correct size
-
-	    // Run the AI model (inference)
-	    ai_i32 nbatch = ai_network_run(network, ai_input, ai_output);
-	    if (nbatch != 1) {
-	        ai_error ai_err = ai_network_get_error(network);
-	        printf("AI model inference failed: type=%d, code=%d\r\n", ai_err.type, ai_err.code);
-	        Error_Handler();
-	    }
-
-	    // Find the index of the predicted activity
-	    float max_val = out_data[0];
-	    int max_idx = 0;
-	    for (int i = 1; i < AI_NETWORK_OUT_1_SIZE; i++) {
-	        if (out_data[i] > max_val) {
-	            max_val = out_data[i];
-	            max_idx = i;
-	        }
-	    }
-
-	    // Print predicted activity
-	    printf("Predicted activity: %s (confidence: %.2f)\r\n", activities[max_idx], max_val);
-	    return max_idx;
-	}
 
   /* USER CODE END 1 */
 
@@ -300,7 +211,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint32_t write_index = 0; // AI stuff
+  	uint32_t write_index = 0;
     while (1)
     {
         check_button_release();
@@ -436,9 +347,15 @@ int main(void)
 
 			printf("Conversion, bias removal and hanning application OK\r\n");
 
-			int predicted_word_index = AI_Process((float*)waveform);
-			printf("Detected word: %s\r\n", activities[predicted_word_index]);
+			for (uint32_t i = 0; i < AI_NETWORK_IN_1_SIZE; i++) {
+			    aiInData[i] = input_tensor[i];  // Use MFCC or spectrogram values
+			}
 
+			printf("Running inference\r\n");
+			AI_Run(aiInData, aiOutData);
+
+			uint32_t class = argmax(aiOutData, AI_NETWORK_OUT_1_SIZE);
+			printf("Detected Word: %s (Confidence: %8.6f)\r\n", activities[class], aiOutData[class]);
         }
 
         HAL_Delay(100);  // Small delay for stability
@@ -738,6 +655,53 @@ void arm_hanning_f32(float32_t * pDst, uint32_t blockSize) {
      w = 0.5f * (1.0f - cosf (w));
      pDst[i] = w;
    }
+}
+
+static void AI_Init(void)
+{
+  ai_error err;
+
+  /* Create a local array with the addresses of the activations buffers */
+  const ai_handle act_addr[] = { activations };
+  /* Create an instance of the model */
+  err = ai_network_create_and_init(&network, act_addr, NULL);
+  if (err.type != AI_ERROR_NONE) {
+    printf("ai_network_create error - type=%d code=%d\r\n", err.type, err.code);
+    Error_Handler();
+  }
+  ai_input = ai_network_inputs_get(network, NULL);
+  ai_output = ai_network_outputs_get(network, NULL);
+}
+
+
+static void AI_Run(float *pIn, float *pOut)
+{
+  ai_i32 batch;
+  ai_error err;
+
+  /* Update IO handlers with the data payload */
+  ai_input[0].data = AI_HANDLE_PTR(pIn);
+  ai_output[0].data = AI_HANDLE_PTR(pOut);
+
+  batch = ai_network_run(network, ai_input, ai_output);
+  if (batch != 1) {
+    err = ai_network_get_error(network);
+    printf("AI ai_network_run error - type=%d code=%d\r\n", err.type, err.code);
+    Error_Handler();
+  }
+}
+
+static uint32_t argmax(const float * values, uint32_t len)
+{
+  float max_value = values[0];
+  uint32_t max_index = 0;
+  for (uint32_t i = 1; i < len; i++) {
+    if (values[i] > max_value) {
+      max_value = values[i];
+      max_index = i;
+    }
+  }
+  return max_index;
 }
 
 /* USER CODE END 4 */
