@@ -350,7 +350,6 @@ int main(void)
 			for (uint32_t i = 0; i < AI_NETWORK_IN_1_SIZE; i++) {
 			    aiInData[i] = input_tensor[i];  // Use MFCC or spectrogram values
 			}
-
 			printf("Running inference\r\n");
 			AI_Run(aiInData, aiOutData);
 
