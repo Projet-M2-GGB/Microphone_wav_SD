@@ -104,7 +104,8 @@ WAV_Header header;
 //ai_buffer * ai_output;
 
 /* Audio processing RELATED VARIABLES */
-int16_t audio_buffer[BUFFER_SIZE];
+static uint16_t waveform[BUFFER_SIZE];
+static uint16_t last_ffts[125];
 
 const static uint32_t frame_step = 128;
 
@@ -224,10 +225,13 @@ int main(void)
 	 * @return Index of the predicted activity
 	 */
 	int AI_Process(const float* input_data) {
-	    // Copy input data to in_data buffer
-	    memcpy(in_data, input_data, sizeof(in_data));
+	    // Copy processed spectrogram (stored in waveform) to input buffer in_data
+	    // Ensure input_data matches the shape expected by the AI model (for example, AI_NETWORK_IN_1_SIZE)
+	    // Typically, you'll need to reshape or flatten your spectrogram data to match the input size of the model
 
-	    // Run the AI model
+	    memcpy(in_data, input_data, sizeof(in_data));  // Assuming input_data is the spectrogram of correct size
+
+	    // Run the AI model (inference)
 	    ai_i32 nbatch = ai_network_run(network, ai_input, ai_output);
 	    if (nbatch != 1) {
 	        ai_error ai_err = ai_network_get_error(network);
@@ -245,9 +249,11 @@ int main(void)
 	        }
 	    }
 
+	    // Print predicted activity
 	    printf("Predicted activity: %s (confidence: %.2f)\r\n", activities[max_idx], max_val);
 	    return max_idx;
 	}
+
   /* USER CODE END 1 */
 
   /* Enable the CPU Cache */
@@ -330,16 +336,14 @@ int main(void)
                 printf("Recording stopped.\r\n");
             }
 
-            ReadWAVFileInfo("WAVE.wav");
+            //ReadWAVFileInfo("WAVE.wav");
 
             /* Audio processing step*/
 
             // We read the contents of the file, save the info in the "audio_buffer" variable
-            read_wav_file("WAVE.wav", audio_buffer);
+            read_wav_file("WAVE.wav", waveform);
 
-            HAL_Delay(1000);
-
-            printf("test .\r\n");
+            printf("Shape of audio_buffer: (%u,)\r\n", sizeof(waveform) / sizeof(waveform[0]));
 
             // We create a fast fft instance (lookup)
         	if (arm_rfft_fast_init_f32(&fft, FFT_SIZE) != ARM_MATH_SUCCESS) {
@@ -349,6 +353,91 @@ int main(void)
         	// We create a hanning window, of size 256
             static float32_t hanning[FFT_SIZE];
         	arm_hanning_f32(hanning, FFT_SIZE);
+
+        	printf("Normalizing audio\r\n");
+        	// Normalisation de l'audio
+        	float min = 32767.0f;  // Set min to the maximum positive value for 16-bit signed integer
+        	float max = -32768.0f; // Set max to the minimum negative value for 16-bit signed integer
+
+        	for (uint32_t i = 0; i < sizeof(waveform) / sizeof(waveform[0]); i++) {
+        	    int16_t val = waveform[i];  // Directly access the int16_t sample
+        	    if ((float)val < min) min = (float)val;  // Compare values and update min
+        	    if ((float)val > max) max = (float)val;  // Compare values and update max
+        	}
+        	printf("Normalizing audio OK\r\n");
+
+        	printf("Min value: %.2f, Max value: %.2f\r\n", min, max);
+
+        	printf("Conversion, bias removal and hanning application\r\n");
+        	// Conversion waveform to float (-1 to 1), Remove DC bias (mean subtraction), applies Hanning window
+        	for (uint32_t idx = 0; idx < 124; idx++) {
+        	    float dst[FFT_SIZE];
+        	    static float mag[FFT_SIZE + 1];
+        	    double sum = 0;
+        	    static float* signal_chunk = mag;
+
+        	    for (uint32_t i = 0; i < FFT_SIZE; i++) {
+        	        signal_chunk[i] = (float)((uint16_t)waveform[idx * frame_step + i]);
+        	        // Normalize from -1 to 1
+        	        signal_chunk[i] = (2.0f * (signal_chunk[i] - min) / (max - min)) - 1;
+        	        sum += signal_chunk[i];
+        	    }
+
+    			// Remove DC component
+    			float mean = (float)(sum / (double)FFT_SIZE);
+    			for (uint32_t i = 0; i < FFT_SIZE; i++) {
+    				signal_chunk[i] = signal_chunk[i] - mean;
+
+    				// Apply window function
+    				signal_chunk[i] *= hanning[i];
+    			}
+
+    			// Compute FFT
+    			arm_rfft_fast_f32(&fft, signal_chunk, dst, 0);
+
+    			// The first "complex" is actually to reals, X[0] and X[N/2]
+				float first_real = (dst[0] < 0.0f) ? (-1.0f * dst[0]) : dst[0];
+				float second_real = (dst[1] < 0.0f) ? (-1.0f * dst[1]) : dst[1];
+
+				// Take the magnitude for all the complex values in between
+				arm_cmplx_mag_f32(dst + 2, mag + 1, FFT_SIZE / 2);
+
+				// Fill in the two real numbers at 0 and N/2
+				mag[0] = first_real;
+				mag[128] = second_real;
+
+				for (uint32_t i = 0; i < 129; i++) {
+					// We can't override waveform[129 * idx + 128] yet
+					// because we need it for the next iteration, so we need to store
+					// it separately
+					if (i < 128) {
+						((uint16_t*)waveform)[128 * idx + i] = (uint8_t)(mag[i] * 8.0f);
+					}
+					else {
+						last_ffts[idx] = (uint8_t)(mag[i] * 8.0f);
+					}
+				}
+			}
+
+			// Spectrogram formatting
+			uint8_t* input_tensor = waveform;
+			uint32_t input_tensor_len = 124 * 129;
+
+			for (uint32_t idx = 123; idx > 0; idx--){
+			    uint8_t tmp[128];
+			    memcpy(tmp, waveform + (idx * 128), 128);
+			    memcpy(waveform + (idx * 128 + idx), tmp, 128);
+			    waveform[idx * 128 + (idx - 1)] = last_ffts[idx - 1];
+        	}
+
+//			for (uint32_t i = 0; i < input_tensor_len; i++){
+//				printf("%u\r\n", input_tensor[i]);
+//			}
+
+			printf("Conversion, bias removal and hanning application OK\r\n");
+
+			int predicted_word_index = AI_Process((float*)waveform);
+			printf("Detected word: %s\r\n", activities[predicted_word_index]);
 
         }
 
