@@ -1,7 +1,7 @@
-../Drivers/wave_audio/waverecorder.c:75:20:AUDIO_REC_Start	72	static
-../Drivers/wave_audio/waverecorder.c:132:20:AUDIO_REC_Process	40	static
-../Drivers/wave_audio/waverecorder.c:227:6:BSP_AUDIO_IN_TransferComplete_CallBack	4	static
-../Drivers/wave_audio/waverecorder.c:249:6:BSP_AUDIO_IN_HalfTransfer_CallBack	4	static
-../Drivers/wave_audio/waverecorder.c:276:17:WavProcess_EncInit	16	static
-../Drivers/wave_audio/waverecorder.c:304:17:WavProcess_HeaderInit	16	static
-../Drivers/wave_audio/waverecorder.c:389:17:WavProcess_HeaderUpdate	16	static
+../Drivers/wave_audio/waverecorder.c:75:20:AUDIO_REC_Start	24	static
+../Drivers/wave_audio/waverecorder.c:108:20:AUDIO_REC_Process	32	static
+../Drivers/wave_audio/waverecorder.c:177:6:BSP_AUDIO_IN_TransferComplete_CallBack	4	static
+../Drivers/wave_audio/waverecorder.c:199:6:BSP_AUDIO_IN_HalfTransfer_CallBack	4	static
+../Drivers/wave_audio/waverecorder.c:226:17:WavProcess_EncInit	16	static
+../Drivers/wave_audio/waverecorder.c:254:17:WavProcess_HeaderInit	16	static
+../Drivers/wave_audio/waverecorder.c:339:17:WavProcess_HeaderUpdate	16	static

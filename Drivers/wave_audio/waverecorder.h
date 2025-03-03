@@ -35,8 +35,8 @@
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-AUDIO_ErrorTypeDef AUDIO_REC_Process(void);
-AUDIO_ErrorTypeDef AUDIO_REC_Start(void);
+AUDIO_ErrorTypeDef AUDIO_REC_Start(uint16_t *waveform);
+AUDIO_ErrorTypeDef AUDIO_REC_Process(uint16_t *waveform);
 AUDIO_ErrorTypeDef AUDIO_PLAYER_Init(void);
 
 #endif /* __WAVERECORDER_H */

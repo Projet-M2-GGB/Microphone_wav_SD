@@ -231,19 +231,19 @@ int main(void)
             if (AudioState == AUDIO_STATE_IDLE)
             {
                 /* Configure the audio recorder: sampling frequency, bits-depth, number of channels */
-                AUDIO_REC_Start();
+                AUDIO_REC_Start(waveform);
             }
 
             /* While recording, we loop the recording process */
             while (AudioState == AUDIO_STATE_RECORD)
             {
-                status = AUDIO_REC_Process();
+                status = AUDIO_REC_Process(waveform);
             }
 
             /* Once we stop recording, we correctly close the .WAV */
             if (AudioState == AUDIO_STATE_STOP)
             {
-                status = AUDIO_REC_Process();
+                status = AUDIO_REC_Process(waveform);
                 printf("Recording stopped.\r\n");
             }
 
@@ -252,7 +252,7 @@ int main(void)
             /* Audio processing step*/
 
             // We read the contents of the file, save the info in the "audio_buffer" variable
-            read_wav_file("WAVE.wav", waveform);
+            //read_wav_file("WAVE.wav", waveform);
 
             printf("Shape of audio_buffer: (%u,)\r\n", sizeof(waveform) / sizeof(waveform[0]));
 

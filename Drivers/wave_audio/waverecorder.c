@@ -72,56 +72,32 @@ static uint32_t WavProcess_HeaderUpdate(uint8_t* pHeader, WAVE_FormatTypeDef* pW
   * @param  None
   * @retval Audio error
   */ 
-AUDIO_ErrorTypeDef AUDIO_REC_Start(void)
+AUDIO_ErrorTypeDef AUDIO_REC_Start(uint16_t *waveform)
 {
-  uint32_t byteswritten = 0;
-  uint8_t str[FILEMGR_FILE_NAME_SIZE + 20];
+    uint32_t byteswritten = 0;
 
-  uwVolume = 100;
+    /* Initialize the audio recording without any file operations */
+    printf("Recording started...\r\n");
 
-  /* Create a new file system */
-  if (f_mount(&SDFatFS, (TCHAR const*) SDPath, 0) != FR_OK) {
-    	Error_Handler(); /* FatFs Initialization Error */
-  } else {
-	  printf("SD card mounted\r\n");
-	  // Commenting out the format part to avoid reformatting the SD card every time
-	  /*
-	  if (f_mkfs((TCHAR const*) SDPath, FM_ANY, 0, workBuffer,
-		  	  sizeof(workBuffer)) != FR_OK) {
-		  Error_Handler(); / * FatFs Format Error */
-//	  } else {
-//	  */
+    /* Initialize the audio input configuration (no file operations) */
+    BSP_AUDIO_IN_Init(DEFAULT_AUDIO_IN_FREQ, DEFAULT_AUDIO_IN_BIT_RESOLUTION, DEFAULT_AUDIO_IN_CHANNEL_NBR);
+    printf("Recording config initialized\r\n");
 
-	  printf("WAV file created\r\n");
-	  if(f_open(&WavFile, REC_WAVE_NAME, FA_CREATE_ALWAYS | FA_WRITE) == FR_OK)
-	  {
-		/* Initialize header file */
-		WavProcess_EncInit(DEFAULT_AUDIO_IN_FREQ, pHeaderBuff);
+    /* Start the recording */
+    BSP_AUDIO_IN_Record((uint16_t*)&BufferCtl.pcm_buff[0], AUDIO_IN_PCM_BUFFER_SIZE);
 
-		/* Write header file */
-		if(f_write(&WavFile, pHeaderBuff, 44, (void*)&byteswritten) == FR_OK)
-		{
-		  printf("State : ready to record\r\n");
-		  AudioState = AUDIO_STATE_RECORD;
+    /* Initialize buffer control */
+    BufferCtl.fptr = byteswritten;
+    BufferCtl.pcm_ptr = 0;
+    BufferCtl.offset = 0;
+    BufferCtl.wr_state = BUFFER_EMPTY;
 
-			if(byteswritten != 0)
-			{
-			  BSP_AUDIO_IN_Init(DEFAULT_AUDIO_IN_FREQ, DEFAULT_AUDIO_IN_BIT_RESOLUTION, DEFAULT_AUDIO_IN_CHANNEL_NBR);
-			  printf("Recording config initialized\r\n");
-			  BSP_AUDIO_IN_Record((uint16_t*)&BufferCtl.pcm_buff[0], AUDIO_IN_PCM_BUFFER_SIZE);
-			  printf("Recording started...\r\n");
-			  BufferCtl.fptr = byteswritten;
-			  BufferCtl.pcm_ptr = 0;
-			  BufferCtl.offset = 0;
-			  BufferCtl.wr_state = BUFFER_EMPTY;
-			  return AUDIO_ERROR_NONE;
-			}
-		}
-	  }
-	  //}
-  }
-  return AUDIO_ERROR_IO;
+    /* Instead of writing to WAV file, save the data to waveform[] */
+    AudioState = AUDIO_STATE_RECORD;
+
+    return AUDIO_ERROR_NONE;
 }
+
 
 
 /**
@@ -129,95 +105,69 @@ AUDIO_ErrorTypeDef AUDIO_REC_Start(void)
   * @param  None
   * @retval Audio error
   */
-AUDIO_ErrorTypeDef AUDIO_REC_Process(void)
+AUDIO_ErrorTypeDef AUDIO_REC_Process(uint16_t *waveform)
 {
-  uint32_t byteswritten = 0;
-  AUDIO_ErrorTypeDef audio_error = AUDIO_ERROR_NONE;
-  uint32_t elapsed_time; 
-  static uint32_t prev_elapsed_time = 0xFFFFFFFF;
-  uint8_t str[16];
-  //static TS_StateTypeDef  TS_State={0};
-  //printf("PRE SWITCH\r\n");
-  switch(AudioState)
-  {
-  case AUDIO_STATE_RECORD:
-	  //printf("AUDIO STATE RECORD ENTERED SWITCH\r\n");
-      /* MAX Recording time reached, so stop audio interface and close file */
-      if(BufferCtl.fptr >= REC_SAMPLE_LENGTH)
-      {
-    	//printf("MAX RECORDING TIME REACHED\r\n");
-        AudioState = AUDIO_STATE_STOP;
+    uint32_t byteswritten = 0;
+    AUDIO_ErrorTypeDef audio_error = AUDIO_ERROR_NONE;
+    uint32_t elapsed_time;
+    static uint32_t prev_elapsed_time = 0xFFFFFFFF;
+
+    switch (AudioState)
+    {
+    case AUDIO_STATE_RECORD:
+        /* MAX Recording time reached, so stop recording */
+        if (BufferCtl.fptr >= REC_SAMPLE_LENGTH)
+        {
+            AudioState = AUDIO_STATE_STOP;
+            break;
+        }
+
+        /* Check if there is data to process (now we write it to waveform[]) */
+        if (BufferCtl.wr_state == BUFFER_FULL)
+        {
+            /* Instead of writing to file, store audio data in waveform[] */
+            for (int i = 0; i < AUDIO_IN_PCM_BUFFER_SIZE; i++)
+            {
+                waveform[BufferCtl.pcm_ptr + i] = BufferCtl.pcm_buff[i];  // Store audio in waveform[]
+            }
+
+            BufferCtl.pcm_ptr += AUDIO_IN_PCM_BUFFER_SIZE;
+            BufferCtl.fptr += AUDIO_IN_PCM_BUFFER_SIZE;  // Update the pointer to the total number of bytes recorded
+
+            /* Reset buffer state */
+            BufferCtl.wr_state = BUFFER_EMPTY;
+        }
+
+        /* Display elapsed time and file size (in terms of the number of samples recorded) */
+        elapsed_time = BufferCtl.fptr / (DEFAULT_AUDIO_IN_FREQ * DEFAULT_AUDIO_IN_CHANNEL_NBR * 2);  // 2 for 16-bit samples
+        if (prev_elapsed_time != elapsed_time)
+        {
+            prev_elapsed_time = elapsed_time;
+            printf("Elapsed time: [%02d:%02d]\r\n", (int)(elapsed_time / 60), (int)(elapsed_time % 60));
+            printf("File size: %4d KB\r\n", (int)(BufferCtl.fptr / 1024));
+        }
         break;
-      }
-
-      /* Check if there are Data to write to SD card */
-      if(BufferCtl.wr_state == BUFFER_FULL)
-      {
-        /* write buffer in file */
-        if(f_write(&WavFile, (uint8_t*)(BufferCtl.pcm_buff + BufferCtl.offset),
-                   AUDIO_IN_PCM_BUFFER_SIZE,
-                   (void*)&byteswritten) != FR_OK)
-        {
-          printf("recording failed\r\n");
-          return AUDIO_ERROR_IO;
-        }
-        else
-        {
-            //printf("Successfully wrote %lu bytes to WAV file.\r\n", byteswritten);
-        }
-        BufferCtl.fptr += byteswritten;
-        BufferCtl.wr_state =  BUFFER_EMPTY;
-      }
-
-      //printf("ELAPSED TIME THING\r\n");
-      /* Display elapsed time */
-      elapsed_time = BufferCtl.fptr / (DEFAULT_AUDIO_IN_FREQ * DEFAULT_AUDIO_IN_CHANNEL_NBR * 2);
-      if(prev_elapsed_time != elapsed_time)
-      {
-        prev_elapsed_time = elapsed_time;
-        printf("Elapsed time : \r\n");
-        printf("[%02d:%02d]\r\n", (int)(elapsed_time /60), (int)(elapsed_time%60));
-        printf("File size : \r\n");
-        printf("%4d KB\r\n", (int)((int32_t)BufferCtl.fptr/1024));
-      }
-      break;
 
     case AUDIO_STATE_STOP:
-      /* Stop recorder */
-      BSP_AUDIO_IN_Stop(CODEC_PDWN_SW);
-      HAL_Delay(300);
-      if(f_lseek(&WavFile, 0) == FR_OK)
-      {
-        /* Update the wav file header save it into wav file */
-        WavProcess_HeaderUpdate(pHeaderBuff, &WaveFormat);
+        /* Stop recording */
+        BSP_AUDIO_IN_Stop(CODEC_PDWN_SW);
+        HAL_Delay(300);  // Allow the audio buffer to finish processing
 
-        if(f_write(&WavFile, pHeaderBuff, sizeof(WAVE_FormatTypeDef), (void*)&byteswritten) == FR_OK)
-        {
-          audio_error = AUDIO_ERROR_EOF;
-        }
-        else
-        {
-          audio_error = AUDIO_ERROR_IO;
-        }
-      }
-      else
-      {
-        audio_error = AUDIO_ERROR_IO;
-      }
-      AudioState = AUDIO_STATE_IDLE;
-      /* Close file */
-      f_close(&WavFile);
-      printf("wave file closed success\r\n");
-      break;
+        AudioState = AUDIO_STATE_IDLE;
+        break;
 
-  	case AUDIO_STATE_IDLE:
-  	case AUDIO_STATE_INIT:
-  	default:
-      /* Do Nothing */
-      break;
-      return audio_error;
+    case AUDIO_STATE_IDLE:
+    case AUDIO_STATE_INIT:
+    default:
+        /* Do Nothing */
+        break;
     }
+
+    return audio_error;
 }
+
+
+
 
 /**
   * @brief  Calculates the remaining file size and new position of the pointer.
