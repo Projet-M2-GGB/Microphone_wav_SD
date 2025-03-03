@@ -77,7 +77,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Middlewares/Third_Party/ARM_CMSIS/CMSIS/DSP/Include/dsp/complex_math_functions.h \
  ../Middlewares/Third_Party/ARM_CMSIS/CMSIS/DSP/Include/dsp/filtering_functions.h \
  ../Middlewares/Third_Party/ARM_CMSIS/CMSIS/DSP/Include/dsp/support_functions.h \
- ../Middlewares/Third_Party/ARM_CMSIS/CMSIS/DSP/Include/dsp/quaternion_math_functions.h
+ ../Middlewares/Third_Party/ARM_CMSIS/CMSIS/DSP/Include/dsp/quaternion_math_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/CMSIS/DSP/Include/dsp/transform_functions.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h:
 ../Core/Inc/stm32f7xx_hal_conf.h:
@@ -168,3 +169,4 @@ C:/Users/fabi_/Documents/STM32_Projects/Microphone_wav_SD/Drivers/wave_audio/wav
 ../Middlewares/Third_Party/ARM_CMSIS/CMSIS/DSP/Include/dsp/filtering_functions.h:
 ../Middlewares/Third_Party/ARM_CMSIS/CMSIS/DSP/Include/dsp/support_functions.h:
 ../Middlewares/Third_Party/ARM_CMSIS/CMSIS/DSP/Include/dsp/quaternion_math_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/CMSIS/DSP/Include/dsp/transform_functions.h:

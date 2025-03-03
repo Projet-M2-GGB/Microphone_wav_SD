@@ -38,6 +38,7 @@
 #include "network_data.h"
 
 #include "arm_math.h"  // For DSP functions like FFT
+#include "dsp/transform_functions.h"
 
 /* USER CODE END Includes */
 
@@ -63,7 +64,7 @@ typedef struct __attribute__((packed)) {
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define WAV_SAMPLE_RATE 16000
+#define BUFFER_SIZE 16000  // 1 second of audio at 16kHz
 #define FFT_SIZE 256  // Choose a suitable size based on your model's input
 #define NUM_MEL_BINS 40  // Optional: if using Mel spectrograms
 /* USER CODE END PD */
@@ -102,6 +103,13 @@ WAV_Header header;
 //ai_buffer * ai_input;
 //ai_buffer * ai_output;
 
+/* Audio processing RELATED VARIABLES */
+int16_t audio_buffer[BUFFER_SIZE];
+
+const static uint32_t frame_step = 128;
+
+static arm_rfft_fast_instance_f32 fft;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -135,12 +143,9 @@ void ReadWAVFileInfo_fromSD(const char *filename);
 void AI_Init(void);
 int AI_Process(const float* input_data);
 
-int read_wav_file(const char *filename, int16_t *audio_buffer, uint32_t *num_samples);
-void normalize_audio(int16_t *audio_data, uint32_t num_samples, float *normalized_buffer);
-void apply_fft(float *normalized_buffer, float *fft_output, uint32_t fft_size);
-void calculate_mel_spectrogram(float *fft_output, float *mel_spectrogram, uint32_t fft_size, uint32_t num_mel_bins);
-void prepare_ai_model_input(float *mel_spectrogram, float *model_input_buffer, uint32_t num_mel_bins, uint32_t ai_input_size);
-int preprocess_wav_data(float *input_buffer);
+int read_wav_file(const char *filename, int16_t *buffer);
+
+void arm_hanning_f32(float32_t * pDst, uint32_t blockSize);
 
 /* USER CODE END PFP */
 
@@ -327,25 +332,24 @@ int main(void)
 
             ReadWAVFileInfo("WAVE.wav");
 
-            // Process the WAV file for AI inference
-//            if (status == 0)  // Ensure the WAV file was properly processed
-//            {
-//                int ret = preprocess_wav_data(in_data);
-//                if (ret == 0)  // Check if preprocessing was successful
-//                {
-//                    // Run inference on the preprocessed data
-//                    int activity_index = AI_Process(in_data);
-//                    printf("Predicted activity: %s\r\n", activities[activity_index]);
-//                }
-//                else
-//                {
-//                    printf("Error: WAV file preprocessing failed.\r\n");
-//                }
-//            }
-//            else
-//            {
-//                printf("Error: WAV file info reading failed.\r\n");
-//            }
+            /* Audio processing step*/
+
+            // We read the contents of the file, save the info in the "audio_buffer" variable
+            read_wav_file("WAVE.wav", audio_buffer);
+
+            HAL_Delay(1000);
+
+            printf("test .\r\n");
+
+            // We create a fast fft instance (lookup)
+        	if (arm_rfft_fast_init_f32(&fft, FFT_SIZE) != ARM_MATH_SUCCESS) {
+        		printf("Failed to init RFFT");
+        	}
+
+        	// We create a hanning window, of size 256
+            static float32_t hanning[FFT_SIZE];
+        	arm_hanning_f32(hanning, FFT_SIZE);
+
         }
 
         HAL_Delay(100);  // Small delay for stability
@@ -601,119 +605,51 @@ void ReadWAVFileInfo(const char *filename) {
     printf("  Subchunk2ID: %.4s\r\n", header.Subchunk2ID);
     printf("  Subchunk2Size: %d bytes\r\n", header.Subchunk2Size);
 
-    SCB_EnableDCache();
-    SCB_EnableICache();
+//    SCB_EnableDCache();
+//    SCB_EnableICache();
 
     // Close the file
     f_close(&file);
 }
 /* ======================================================== */
 
-int read_wav_file(const char *filename, int16_t *audio_buffer, uint32_t *num_samples) {
-    FIL wav_file;
-    WAV_Header header;
+int read_wav_file(const char *filename, int16_t *buffer) {
+    FIL file;
     UINT bytes_read;
+    FRESULT result = f_open(&file, filename, FA_READ);
 
-    // Open the WAV file
-    if (f_open(&wav_file, filename, FA_READ) != FR_OK) {
-        printf("Error: Unable to open WAV file.\r\n");
-        return -1;
+    if (result != FR_OK) {
+        return -1;  // File open error
     }
 
-    // Read WAV header
-    if (f_read(&wav_file, &header, sizeof(WAV_Header), &bytes_read) != FR_OK) {
-        printf("Error: Unable to read WAV header.\r\n");
-        f_close(&wav_file);
-        return -2;
+    // Skip WAV header (44 bytes)
+    f_lseek(&file, 44);
+
+    // Read audio samples into the buffer
+    result = f_read(&file, buffer, BUFFER_SIZE * sizeof(int16_t), &bytes_read);
+
+    if (result != FR_OK) {
+        f_close(&file);
+        return -1;  // Read error
     }
 
-    // Check if WAV file has the correct format
-    if (header.SampleRate != WAV_SAMPLE_RATE || header.BitsPerSample != 16 || header.NumChannels != 1) {
-        printf("Error: Unsupported WAV format.\r\n");
-        f_close(&wav_file);
-        return -3;
-    }
-
-    // Read audio samples in chunks and process
-    if (f_read(&wav_file, audio_buffer, sizeof(int16_t) * FFT_SIZE, &bytes_read) != FR_OK) {
-        printf("Error: Unable to read audio data.\r\n");
-        f_close(&wav_file);
-        return -4;
-    }
-
-    *num_samples = bytes_read / sizeof(int16_t);
-
-    f_close(&wav_file);
-    return 0;
+    f_close(&file);
+    printf("file successfully read! \r\n");
+    return 0;  // Success
 }
 
 
-void normalize_audio(int16_t *audio_data, uint32_t num_samples, float *normalized_buffer) {
-    for (uint32_t i = 0; i < num_samples; i++) {
-        normalized_buffer[i] = (float)audio_data[i] / 32768.0f;  // Normalize to [-1, 1]
-    }
+void arm_hanning_f32(float32_t * pDst, uint32_t blockSize) {
+   float32_t k = 2.0f / ((float32_t) blockSize);
+   float32_t w;
+
+   for(uint32_t i=0;i<blockSize;i++)
+   {
+     w = PI * i * k;
+     w = 0.5f * (1.0f - cosf (w));
+     pDst[i] = w;
+   }
 }
-
-void apply_fft(float *normalized_buffer, float *fft_output, uint32_t fft_size) {
-    arm_rfft_fast_instance_f32 fft_instance;
-    arm_rfft_fast_init_f32(&fft_instance, fft_size);
-    arm_rfft_fast_f32(&fft_instance, normalized_buffer, fft_output, 0);
-
-    // Convert FFT output to magnitude
-    for (uint32_t i = 0; i < fft_size / 2; i++) {
-        fft_output[i] = sqrtf(fft_output[i] * fft_output[i]);
-    }
-}
-
-
-void calculate_mel_spectrogram(float *fft_output, float *mel_spectrogram, uint32_t fft_size, uint32_t num_mel_bins) {
-    // Your Mel filterbank coefficients should be defined or loaded here
-    // Apply Mel filterbank to the FFT output
-    for (uint32_t i = 0; i < num_mel_bins; i++) {
-        mel_spectrogram[i] = 0.0f;  // Replace this with actual calculation based on filterbank
-    }
-}
-
-
-void prepare_ai_model_input(float *mel_spectrogram, float *model_input_buffer, uint32_t num_mel_bins, uint32_t ai_input_size) {
-    for (uint32_t i = 0; i < ai_input_size; i++) {
-        if (i < num_mel_bins) {
-            model_input_buffer[i] = mel_spectrogram[i];
-        } else {
-            model_input_buffer[i] = 0.0f;  // Pad with zeros or other initialization if needed
-        }
-    }
-}
-
-int preprocess_wav_data(float *input_buffer) {
-    int16_t audio_buffer[FFT_SIZE];
-    float normalized_buffer[FFT_SIZE];
-    float fft_output[FFT_SIZE];
-    float mel_spectrogram[NUM_MEL_BINS];
-    uint32_t num_samples;
-
-    // Step 1: Read the WAV file and get audio samples
-    if (read_wav_file("WAVE.wav", audio_buffer, &num_samples) != 0) {
-        return -1;
-    }
-
-    // Step 2: Normalize audio data to [-1, 1]
-    normalize_audio(audio_buffer, num_samples, normalized_buffer);
-
-    // Step 3: Apply FFT to the normalized audio data
-    apply_fft(normalized_buffer, fft_output, FFT_SIZE);
-
-    // Step 4: Convert FFT output to Mel spectrogram
-    calculate_mel_spectrogram(fft_output, mel_spectrogram, FFT_SIZE / 2, NUM_MEL_BINS);
-
-    // Step 5: Prepare the AI model input buffer with Mel spectrogram
-    prepare_ai_model_input(mel_spectrogram, input_buffer, NUM_MEL_BINS, AI_NETWORK_IN_1_SIZE);
-
-    return 0;
-}
-
-
-
 
 /* USER CODE END 4 */
 
