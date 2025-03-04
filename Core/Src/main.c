@@ -89,9 +89,9 @@ BYTE workBuffer_init[WORK_BUFFER_SIZE];
 extern FIL WavFile;
 static AUDIO_OUT_BufferTypeDef BufferCtl;
 FRESULT res;
-UINT bytesRead;
+UINT bytesRead, bw;
 WAV_Header header;
-
+FIL file;
 /* AI model RELATED VARIABLES */
 ai_handle network;
 float aiInData[AI_NETWORK_IN_1_SIZE];
@@ -218,6 +218,8 @@ int main(void)
         printf("Waiting for input to record...\r\n");
         HAL_Delay(1000);
 
+        SCB_DisableDCache();
+        SCB_DisableICache();
 
         if (button_pressed == 1)
         {
@@ -269,6 +271,7 @@ int main(void)
         	// Normalisation de l'audio
         	float min = 32767.0f;  // Set min to the maximum positive value for 16-bit signed integer
         	float max = -32768.0f; // Set max to the minimum negative value for 16-bit signed integer
+
 
         	for (uint32_t i = 0; i < sizeof(waveform) / sizeof(waveform[0]); i++) {
         	    int16_t val = waveform[i];  // Directly access the int16_t sample
@@ -341,9 +344,30 @@ int main(void)
 			    waveform[idx * 128 + (idx - 1)] = last_ffts[idx - 1];
         	}
 
-//			for (uint32_t i = 0; i < input_tensor_len; i++){
-//				printf("%u\r\n", input_tensor[i]);
-//			}
+			// Save the spectrogram data in the SD card for debugging.
+			res = f_open(&file, "data.txt", FA_WRITE | FA_CREATE_ALWAYS);
+			    if (res == FR_OK) {
+			        // Write the opening bracket
+			        f_write(&file, "[", 1, &bw);
+
+			        // Write the data
+			        char buffer[16];  // Buffer to store formatted numbers
+			        for (uint32_t i = 0; i < input_tensor_len; i++) {
+			            sprintf(buffer, "%u", input_tensor[i]);  // Convert number to string
+			            f_write(&file, buffer, strlen(buffer), &bw);
+			            if (i < input_tensor_len - 1) {
+			                f_write(&file, ", ", 2, &bw);
+			            }
+			        }
+
+			        // Write the closing bracket and newline
+			        f_write(&file, "]\n", 2, &bw);
+
+			        // Close the file
+			        f_close(&file);
+			    } else {
+			        printf("Failed to open file!\r\n");
+			    }
 
 			printf("Conversion, bias removal and hanning application OK\r\n");
 
