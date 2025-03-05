@@ -104,7 +104,7 @@ ai_buffer * ai_input;
 ai_buffer * ai_output;
 
 /* Audio processing RELATED VARIABLES */
-static uint16_t waveform[BUFFER_SIZE];
+static int16_t waveform[BUFFER_SIZE]; // c'était unsigned avant modif 16h le 05/03
 static uint16_t last_ffts[125];
 
 const static uint32_t frame_step = 128;
@@ -269,20 +269,12 @@ int main(void)
         	printf("Normalizing audio\r\n");
         	// Normalisation de l'audio
 
-//        	float min = 32767.0f;  // Set min to the maximum positive value for 16-bit signed integer
-//        	float max = -32768.0f; // Set max to the minimum negative value for 16-bit signed integer
-//
-//        	for (uint32_t i = 0; i < sizeof(waveform) / sizeof(waveform[0]); i++) {
-//        	    int16_t val = waveform[i];  // Directly access the int16_t sample
-//        	    if ((float)val < min) min = (float)val;  // Compare values and update min
-//        	    if ((float)val > max) max = (float)val;  // Compare values and update max
-//        	}
-
-        	float min = 0;  // Set min to the maximum positive value for 16-bit signed integer
-        	float max = 999999.0f; // Set max to the minimum negative value for 16-bit signed integer
+        	float max = 0;  // Set min to the maximum positive value for 16-bit signed integer
+        	float min = 999999.0f; // Set max to the minimum negative value for 16-bit signed integer
+        	float result_norm = 0;
 
         	for (uint32_t i = 0; i < sizeof(waveform) / sizeof(waveform[0]); i++) {
-        	    float val = (float)waveform[i];  // Directly access the int16_t sample
+        	    int16_t val = waveform[i];  // Directly access the int16_t sample
         	    if (val < min) min = val;  // Compare values and update min
         	    if (val > max) max = val;  // Compare values and update max
         	}
@@ -291,18 +283,31 @@ int main(void)
 
         	printf("Min value: %.2f, Max value: %.2f\r\n", min, max);
 
+
+        	if (abs(min) < max)
+        	{
+        		result_norm = max;
+        	}
+        	else
+        	{
+        		result_norm = abs(min);
+        	}
+
+        	printf("Value used for normalization formula: %.2f\r\n", result_norm);
+
         	printf("Conversion, bias removal and hanning application\r\n");
         	// Conversion waveform to float (-1 to 1), Remove DC bias (mean subtraction), applies Hanning window
         	for (uint32_t idx = 0; idx < 124; idx++) {
         	    float dst[FFT_SIZE];
         	    static float mag[FFT_SIZE + 1];
         	    double sum = 0;
-        	    static float* signal_chunk = mag;
+        	    static float* signal_chunk = mag; // remove pointer?
 
         	    for (uint32_t i = 0; i < FFT_SIZE; i++) {
-        	        signal_chunk[i] = (float)((uint16_t)waveform[idx * frame_step + i]);
-        	        // Normalize from -1 to 1
-        	        signal_chunk[i] = (2.0f * (signal_chunk[i] - min) / (max - min)) - 1;
+        	        signal_chunk[i] = ((int16_t)waveform[idx * frame_step + i]);
+
+        	        signal_chunk[i] = (signal_chunk[i] / result_norm);
+
         	        sum += signal_chunk[i];
         	    }
 
@@ -334,7 +339,7 @@ int main(void)
 					// because we need it for the next iteration, so we need to store
 					// it separately
 					if (i < 128) {
-						((uint16_t*)waveform)[128 * idx + i] = (uint8_t)(mag[i] * 8.0f);
+						((int16_t*)waveform)[128 * idx + i] = (uint8_t)(mag[i] * 8.0f);
 					}
 					else {
 						last_ffts[idx] = (uint8_t)(mag[i] * 8.0f);
@@ -343,7 +348,7 @@ int main(void)
 			}
 
 			// Spectrogram formatting
-			uint8_t* input_tensor = waveform;
+			int16_t* input_tensor = waveform;
 			uint32_t input_tensor_len = 124 * 129;
 
 			for (uint32_t idx = 123; idx > 0; idx--){
