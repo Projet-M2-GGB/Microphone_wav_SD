@@ -108,8 +108,7 @@ static uint16_t waveform[BUFFER_SIZE];
 static uint16_t last_ffts[125];
 
 const static uint32_t frame_step = 128;
-
-static arm_rfft_fast_instance_f32 fft;
+arm_rfft_fast_instance_f32 fft;
 
 /* USER CODE END PV */
 
@@ -258,7 +257,7 @@ int main(void)
 
             printf("Shape of audio_buffer: (%u,)\r\n", sizeof(waveform) / sizeof(waveform[0]));
 
-            // We create a fast fft instance (lookup)
+            // We create a fast fft instance
         	if (arm_rfft_fast_init_f32(&fft, FFT_SIZE) != ARM_MATH_SUCCESS) {
         		printf("Failed to init RFFT");
         	}
@@ -269,15 +268,25 @@ int main(void)
 
         	printf("Normalizing audio\r\n");
         	// Normalisation de l'audio
-        	float min = 32767.0f;  // Set min to the maximum positive value for 16-bit signed integer
-        	float max = -32768.0f; // Set max to the minimum negative value for 16-bit signed integer
 
+//        	float min = 32767.0f;  // Set min to the maximum positive value for 16-bit signed integer
+//        	float max = -32768.0f; // Set max to the minimum negative value for 16-bit signed integer
+//
+//        	for (uint32_t i = 0; i < sizeof(waveform) / sizeof(waveform[0]); i++) {
+//        	    int16_t val = waveform[i];  // Directly access the int16_t sample
+//        	    if ((float)val < min) min = (float)val;  // Compare values and update min
+//        	    if ((float)val > max) max = (float)val;  // Compare values and update max
+//        	}
+
+        	float min = 0;  // Set min to the maximum positive value for 16-bit signed integer
+        	float max = 999999.0f; // Set max to the minimum negative value for 16-bit signed integer
 
         	for (uint32_t i = 0; i < sizeof(waveform) / sizeof(waveform[0]); i++) {
-        	    int16_t val = waveform[i];  // Directly access the int16_t sample
-        	    if ((float)val < min) min = (float)val;  // Compare values and update min
-        	    if ((float)val > max) max = (float)val;  // Compare values and update max
+        	    float val = (float)waveform[i];  // Directly access the int16_t sample
+        	    if (val < min) min = val;  // Compare values and update min
+        	    if (val > max) max = val;  // Compare values and update max
         	}
+
         	printf("Normalizing audio OK\r\n");
 
         	printf("Min value: %.2f, Max value: %.2f\r\n", min, max);
@@ -344,8 +353,9 @@ int main(void)
 			    waveform[idx * 128 + (idx - 1)] = last_ffts[idx - 1];
         	}
 
-			// Save the spectrogram data in the SD card for debugging.
-			res = f_open(&file, "data.txt", FA_WRITE | FA_CREATE_ALWAYS);
+
+			// Save the spectrogram data in sd card
+			res = f_open(&file, "datanew.txt", FA_WRITE | FA_CREATE_ALWAYS);
 			    if (res == FR_OK) {
 			        // Write the opening bracket
 			        f_write(&file, "[", 1, &bw);
