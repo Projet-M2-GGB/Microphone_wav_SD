@@ -25,7 +25,7 @@
 /* Private define ------------------------------------------------------------*/
 
 uint8_t pHeaderBuff[44];
-
+#define AUDIO_IN_CHANNEL_NBR        ((uint8_t)1) /* Mono = 1, Stereo = 2 */
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 static AUDIO_IN_BufferTypeDef  BufferCtl;
@@ -106,7 +106,7 @@ AUDIO_ErrorTypeDef AUDIO_REC_Start(void)
 
 			if(byteswritten != 0)
 			{
-			  BSP_AUDIO_IN_Init(DEFAULT_AUDIO_IN_FREQ, DEFAULT_AUDIO_IN_BIT_RESOLUTION, DEFAULT_AUDIO_IN_CHANNEL_NBR);
+			  BSP_AUDIO_IN_Init(DEFAULT_AUDIO_IN_FREQ, DEFAULT_AUDIO_IN_BIT_RESOLUTION, DEFAULT_AUDIO_IN_CHANNEL_NBR); // 1 mono
 			  printf("Recording config initialized\r\n");
 			  BSP_AUDIO_IN_Record((uint16_t*)&BufferCtl.pcm_buff[0], AUDIO_IN_PCM_BUFFER_SIZE);
 			  printf("Recording started...\r\n");

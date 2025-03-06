@@ -104,7 +104,11 @@ ai_buffer * ai_input;
 ai_buffer * ai_output;
 
 /* Audio processing RELATED VARIABLES */
-static int16_t waveform[BUFFER_SIZE]; // c'était unsigned avant modif 16h le 05/03
+static int16_t stereo_waveform[BUFFER_SIZE]; // c'était unsigned avant modif 16h le 05/03
+static int16_t waveform[BUFFER_SIZE];
+
+float input_tensor_float[AI_NETWORK_IN_1_SIZE];
+
 static uint16_t last_ffts[125];
 
 const static uint32_t frame_step = 128;
@@ -253,7 +257,13 @@ int main(void)
             /* Audio processing step*/
 
             // We read the contents of the file, save the info in the "audio_buffer" variable
-            read_wav_file("WAVE.wav", waveform);
+            read_wav_file("WAVE.wav", stereo_waveform);
+
+            // Extract and average both stereo channels to convert to mono
+            for (uint32_t i = 0; i < BUFFER_SIZE / 2; i++) {  // Loop over mono sample count
+                // Average left and right channels
+                waveform[i] = (stereo_waveform[2 * i] + stereo_waveform[2 * i + 1]) / 2;  // Average both channels
+            }
 
             printf("Shape of audio_buffer: (%u,)\r\n", sizeof(waveform) / sizeof(waveform[0]));
 
@@ -304,7 +314,7 @@ int main(void)
         	    static float* signal_chunk = mag; // remove pointer?
 
         	    for (uint32_t i = 0; i < FFT_SIZE; i++) {
-        	        signal_chunk[i] = ((int16_t)waveform[idx * frame_step + i]);
+        	        signal_chunk[i] = (waveform[idx * frame_step + i]);
 
         	        signal_chunk[i] = (signal_chunk[i] / result_norm);
 
@@ -387,7 +397,7 @@ int main(void)
 			printf("Conversion, bias removal and hanning application OK\r\n");
 
 			for (uint32_t i = 0; i < AI_NETWORK_IN_1_SIZE; i++) {
-			    aiInData[i] = input_tensor[i];  // Use MFCC or spectrogram values
+			    aiInData[i] = input_tensor[i];
 			}
 			printf("Running inference\r\n");
 			AI_Run(aiInData, aiOutData);
