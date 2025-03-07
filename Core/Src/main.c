@@ -106,6 +106,7 @@ ai_buffer * ai_output;
 /* Audio processing RELATED VARIABLES */
 static int16_t stereo_waveform[BUFFER_SIZE]; // c'était unsigned avant modif 16h le 05/03
 static int16_t waveform[BUFFER_SIZE];
+static float float_waveform[BUFFER_SIZE];
 
 float input_tensor_float[AI_NETWORK_IN_1_SIZE];
 
@@ -344,21 +345,25 @@ int main(void)
 				mag[0] = first_real;
 				mag[128] = second_real;
 
+				for (int i = 0; i < BUFFER_SIZE; i++) {
+					float_waveform[i] = (float)waveform[i];  // Convert int16_t to float
+				}
+
 				for (uint32_t i = 0; i < 129; i++) {
 					// We can't override waveform[129 * idx + 128] yet
 					// because we need it for the next iteration, so we need to store
 					// it separately
 					if (i < 128) {
-						((int16_t*)waveform)[128 * idx + i] = (uint8_t)(mag[i] * 8.0f);
+						float_waveform[128 * idx + i] = (mag[i] * 8.0f);
 					}
 					else {
-						last_ffts[idx] = (uint8_t)(mag[i] * 8.0f);
+						last_ffts[idx] = (mag[i] * 8.0f);
 					}
 				}
 			}
 
 			// Spectrogram formatting
-			int16_t* input_tensor = waveform;
+			float* input_tensor = float_waveform;
 			uint32_t input_tensor_len = 124 * 129;
 
 			for (uint32_t idx = 123; idx > 0; idx--){
@@ -371,28 +376,29 @@ int main(void)
 
 			// Save the spectrogram data in sd card
 			res = f_open(&file, "datanew.txt", FA_WRITE | FA_CREATE_ALWAYS);
-			    if (res == FR_OK) {
-			        // Write the opening bracket
-			        f_write(&file, "[", 1, &bw);
+			if (res == FR_OK) {
+			    // Write the opening bracket
+			    f_write(&file, "[", 1, &bw);
 
-			        // Write the data
-			        char buffer[16];  // Buffer to store formatted numbers
-			        for (uint32_t i = 0; i < input_tensor_len; i++) {
-			            sprintf(buffer, "%u", input_tensor[i]);  // Convert number to string
-			            f_write(&file, buffer, strlen(buffer), &bw);
-			            if (i < input_tensor_len - 1) {
-			                f_write(&file, ", ", 2, &bw);
-			            }
+			    // Write the data
+			    char buffer[32];  // Increased buffer size for float values
+			    for (uint32_t i = 0; i < input_tensor_len; i++) {
+			        sprintf(buffer, "%.6f", input_tensor[i]);  // Convert float to string with 6 decimal places
+			        f_write(&file, buffer, strlen(buffer), &bw);
+			        if (i < input_tensor_len - 1) {
+			            f_write(&file, ", ", 2, &bw);
 			        }
-
-			        // Write the closing bracket and newline
-			        f_write(&file, "]\n", 2, &bw);
-
-			        // Close the file
-			        f_close(&file);
-			    } else {
-			        printf("Failed to open file!\r\n");
 			    }
+
+			    // Write the closing bracket and newline
+			    f_write(&file, "]\n", 2, &bw);
+
+			    // Close the file
+			    f_close(&file);
+			} else {
+			    printf("Failed to open file!\r\n");
+			}
+
 
 			printf("Conversion, bias removal and hanning application OK\r\n");
 
