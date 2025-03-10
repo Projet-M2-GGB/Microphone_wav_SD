@@ -207,7 +207,7 @@ int main(void)
 
   /* We format the SD card */
   printf("SD card init...\r\n");
-  SDCard_InitAndFormat();
+  //SDCard_InitAndFormat();
 
   AI_Init();
 
@@ -233,38 +233,38 @@ int main(void)
             HAL_GPIO_TogglePin(USR_LED_GPIO_Port, USR_LED_Pin);
             HAL_Delay(100);
 
-            /* If the program is not already recording... */
-            if (AudioState == AUDIO_STATE_IDLE)
-            {
-                /* Configure the audio recorder: sampling frequency, bits-depth, number of channels */
-                AUDIO_REC_Start();
-            }
-
-            /* While recording, we loop the recording process */
-            while (AudioState == AUDIO_STATE_RECORD)
-            {
-                status = AUDIO_REC_Process();
-            }
-
-            /* Once we stop recording, we correctly close the .WAV */
-            if (AudioState == AUDIO_STATE_STOP)
-            {
-                status = AUDIO_REC_Process();
-                printf("Recording stopped.\r\n");
-            }
-
-            //ReadWAVFileInfo("WAVE.wav");
+//            /* If the program is not already recording... */
+//            if (AudioState == AUDIO_STATE_IDLE)
+//            {
+//                /* Configure the audio recorder: sampling frequency, bits-depth, number of channels */
+//                AUDIO_REC_Start();
+//            }
+//
+//            /* While recording, we loop the recording process */
+//            while (AudioState == AUDIO_STATE_RECORD)
+//            {
+//                status = AUDIO_REC_Process();
+//            }
+//
+//            /* Once we stop recording, we correctly close the .WAV */
+//            if (AudioState == AUDIO_STATE_STOP)
+//            {
+//                status = AUDIO_REC_Process();
+//                printf("Recording stopped.\r\n");
+//            }
+//
+//            //ReadWAVFileInfo("WAVE.wav");
 
             /* Audio processing step*/
 
             // We read the contents of the file, save the info in the "audio_buffer" variable
-            read_wav_file("WAVE.wav", stereo_waveform);
+            read_wav_file("WAVEU.wav", waveform);
 
-            // Extract and average both stereo channels to convert to mono
-            for (uint32_t i = 0; i < BUFFER_SIZE; i++) {  // Loop over mono sample count
-                // Average left and right channels
-                waveform[i] = (stereo_waveform[2 * i] + stereo_waveform[2 * i + 1]) / 2;  // Average both channels
-            }
+//            // Extract and average both stereo channels to convert to mono
+//            for (uint32_t i = 0; i < BUFFER_SIZE; i++) {  // Loop over mono sample count
+//                // Average left and right channels
+//                waveform[i] = (stereo_waveform[2 * i] + stereo_waveform[2 * i + 1]) / 2;  // Average both channels
+//            }
 
             printf("Shape of audio_buffer: (%u,)\r\n", sizeof(waveform) / sizeof(waveform[0]));
 
@@ -676,6 +676,13 @@ void ReadWAVFileInfo(const char *filename) {
 int read_wav_file(const char *filename, int16_t *buffer) {
     FIL file;
     UINT bytes_read;
+
+    FRESULT res = f_mount(&SDFatFS, (TCHAR const *)SDPath, 0);
+    if (res != FR_OK) {
+        printf("Error: Failed to mount SD card (Code: %d).\r\n", res);
+        Error_Handler();
+    }
+
     FRESULT result = f_open(&file, filename, FA_READ);
 
     if (result != FR_OK) {
@@ -686,7 +693,7 @@ int read_wav_file(const char *filename, int16_t *buffer) {
     f_lseek(&file, 44);
 
     // Read audio samples into the buffer
-    result = f_read(&file, buffer, (BUFFER_SIZE*2) * sizeof(int16_t), &bytes_read);
+    result = f_read(&file, buffer, (BUFFER_SIZE) * sizeof(int16_t), &bytes_read);
 
     if (result != FR_OK) {
         f_close(&file);
