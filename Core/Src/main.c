@@ -104,7 +104,7 @@ ai_buffer * ai_input;
 ai_buffer * ai_output;
 
 /* Audio processing RELATED VARIABLES */
-static int16_t stereo_waveform[BUFFER_SIZE]; // c'était unsigned avant modif 16h le 05/03
+static int16_t stereo_waveform[BUFFER_SIZE*2]; // c'était unsigned avant modif 16h le 05/03
 static int16_t waveform[BUFFER_SIZE];
 static float float_waveform[BUFFER_SIZE];
 
@@ -261,7 +261,7 @@ int main(void)
             read_wav_file("WAVE.wav", stereo_waveform);
 
             // Extract and average both stereo channels to convert to mono
-            for (uint32_t i = 0; i < BUFFER_SIZE / 2; i++) {  // Loop over mono sample count
+            for (uint32_t i = 0; i < BUFFER_SIZE; i++) {  // Loop over mono sample count
                 // Average left and right channels
                 waveform[i] = (stereo_waveform[2 * i] + stereo_waveform[2 * i + 1]) / 2;  // Average both channels
             }
@@ -368,9 +368,9 @@ int main(void)
 
 			for (uint32_t idx = 123; idx > 0; idx--){
 			    uint8_t tmp[128];
-			    memcpy(tmp, waveform + (idx * 128), 128);
-			    memcpy(waveform + (idx * 128 + idx), tmp, 128);
-			    waveform[idx * 128 + (idx - 1)] = last_ffts[idx - 1];
+			    memcpy(tmp, float_waveform + (idx * 128), 128);
+			    memcpy(float_waveform + (idx * 128 + idx), tmp, 128);
+			    float_waveform[idx * 128 + (idx - 1)] = last_ffts[idx - 1];
         	}
 
 
@@ -686,7 +686,7 @@ int read_wav_file(const char *filename, int16_t *buffer) {
     f_lseek(&file, 44);
 
     // Read audio samples into the buffer
-    result = f_read(&file, buffer, BUFFER_SIZE * sizeof(int16_t), &bytes_read);
+    result = f_read(&file, buffer, (BUFFER_SIZE*2) * sizeof(int16_t), &bytes_read);
 
     if (result != FR_OK) {
         f_close(&file);
