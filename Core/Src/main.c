@@ -25,6 +25,7 @@
 #include "sdmmc.h"
 #include "usart.h"
 #include "gpio.h"
+#include "fmc.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -105,15 +106,11 @@ ai_buffer * ai_output;
 
 /* Audio processing RELATED VARIABLES */
 
-static int16_t stereo_waveform[BUFFER_SIZE*2]; // c'était unsigned avant modif 16h le 05/03
+static int16_t stereo_waveform[BUFFER_SIZE*2];
+static int16_t waveform[BUFFER_SIZE] __attribute__((section(".sdram")));
+static float float_waveform[BUFFER_SIZE] __attribute__((section(".sdram")));
+static float spectrogram[124][129] __attribute__((section(".sdram")));
 
-static int16_t waveform[BUFFER_SIZE];
-
-static float float_waveform[BUFFER_SIZE];
-
-static float spectrogram[124][129]; // 124 frames, 129 frequency bins (FFT_SIZE/2 + 1)
-
-float input_tensor_float[AI_NETWORK_IN_1_SIZE];
 
 static uint16_t last_ffts[125];
 
@@ -209,12 +206,14 @@ int main(void)
   MX_FATFS_Init();
   MX_SDMMC1_SD_Init();
   MX_CRC_Init();
+  MX_FMC_Init();
+
   /* USER CODE BEGIN 2 */
 
   /* We format the SD card */
   printf("SD card init...\r\n");
   SDCard_InitAndFormat();
-
+  BSP_SDRAM_Init();
   AI_Init();
 
   /* USER CODE END 2 */
@@ -275,16 +274,12 @@ int main(void)
 					return;
 				}
 
-				// Vérification du format (Mono/Stéréo)
-				uint8_t is_stereo = (header.NumChannels == 2);
-				printf("Format audio : %s\r\n", is_stereo ? "Stéréo" : "Mono");
-
 				// Si le fichier est stéréo, on le convertit en mono en moyennant les canaux
-				if (is_stereo) {
-					for (uint32_t i = 0; i < BUFFER_SIZE; i++) {
-						waveform[i] = (stereo_waveform[2 * i] + stereo_waveform[2 * i + 1]) / 2;  // Moyenne des deux canaux
-					}
+
+				for (uint32_t i = 0; i < BUFFER_SIZE; i++) {
+					waveform[i] = (stereo_waveform[2 * i] + stereo_waveform[2 * i + 1]) / 2;  // Moyenne des deux canaux
 				}
+
 
 				// -------------------- NORMALISATION --------------------
 				printf("Normalisation de l'audio...\r\n");
@@ -395,7 +390,7 @@ int main(void)
 
 				printf("Sauvegarde du spectrogramme...\r\n");
 
-				res = f_open(&file, "spectrogram_data.txt", FA_WRITE | FA_CREATE_ALWAYS);
+				res = f_open(&file, "data.txt", FA_WRITE | FA_CREATE_ALWAYS);
 				if (res == FR_OK) {
 					f_write(&file, "[", 1, &bw);
 					char buffer[32];
@@ -410,7 +405,7 @@ int main(void)
 						}
 					}
 
-					f_write(&file, "]\n", 2, &bw);
+					f_write(&file, "]", 2, &bw);
 					f_close(&file);
 					printf("Sauvegarde réussie !\r\n");
 				} else {
