@@ -368,9 +368,9 @@ int main(void)
 
 			for (uint32_t idx = 123; idx > 0; idx--){
 			    uint8_t tmp[128];
-			    memcpy(tmp, float_waveform + (idx * 128), 128);
-			    memcpy(float_waveform + (idx * 128 + idx), tmp, 128);
-			    float_waveform[idx * 128 + (idx - 1)] = last_ffts[idx - 1];
+			    memcpy(tmp, waveform + (idx * 128), 128);
+			    memcpy(waveform + (idx * 128 + idx), tmp, 128);
+			    waveform[idx * 128 + (idx - 1)] = last_ffts[idx - 1];
         	}
 
 
