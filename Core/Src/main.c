@@ -104,15 +104,21 @@ ai_buffer * ai_input;
 ai_buffer * ai_output;
 
 /* Audio processing RELATED VARIABLES */
+
 static int16_t stereo_waveform[BUFFER_SIZE*2]; // c'était unsigned avant modif 16h le 05/03
+
 static int16_t waveform[BUFFER_SIZE];
+
 static float float_waveform[BUFFER_SIZE];
+
+static float spectrogram[124][129]; // 124 frames, 129 frequency bins (FFT_SIZE/2 + 1)
 
 float input_tensor_float[AI_NETWORK_IN_1_SIZE];
 
 static uint16_t last_ffts[125];
 
 const static uint32_t frame_step = 128;
+
 arm_rfft_fast_instance_f32 fft;
 
 /* USER CODE END PV */
@@ -152,7 +158,7 @@ void arm_hanning_f32(float32_t * pDst, uint32_t blockSize);
 static void AI_Init(void);
 static void AI_Run(float *pIn, float *pOut);
 static uint32_t argmax(const float * values, uint32_t len);
-
+void softmax(float *values, uint32_t len);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -257,159 +263,193 @@ int main(void)
 
             /* Audio processing step*/
 
-            // We read the contents of the file, save the info in the "audio_buffer" variable
-            read_wav_file("WAVE.wav", stereo_waveform);
+//            // We read the contents of the file, save the info in the "audio_buffer" variable
+//            read_wav_file("WAVE.wav", stereo_waveform);
+//            //Début traitement
 
-            // Extract and average both stereo channels to convert to mono
-            for (uint32_t i = 0; i < BUFFER_SIZE; i++) {  // Loop over mono sample count
-                // Average left and right channels
-                waveform[i] = (stereo_waveform[2 * i] + stereo_waveform[2 * i + 1]) / 2;  // Average both channels
-            }
-
-            printf("Shape of audio_buffer: (%u,)\r\n", sizeof(waveform) / sizeof(waveform[0]));
-
-            // We create a fast fft instance
-        	if (arm_rfft_fast_init_f32(&fft, FFT_SIZE) != ARM_MATH_SUCCESS) {
-        		printf("Failed to init RFFT");
-        	}
-
-        	// We create a hanning window, of size 256
-            static float32_t hanning[FFT_SIZE];
-        	arm_hanning_f32(hanning, FFT_SIZE);
-
-        	printf("Normalizing audio\r\n");
-        	// Normalisation de l'audio
-
-        	float max = 0;  // Set min to the maximum positive value for 16-bit signed integer
-        	float min = 999999.0f; // Set max to the minimum negative value for 16-bit signed integer
-        	float result_norm = 0;
-
-        	for (uint32_t i = 0; i < sizeof(waveform) / sizeof(waveform[0]); i++) {
-        	    int16_t val = waveform[i];  // Directly access the int16_t sample
-        	    if (val < min) min = val;  // Compare values and update min
-        	    if (val > max) max = val;  // Compare values and update max
-        	}
-
-        	printf("Normalizing audio OK\r\n");
-
-        	printf("Min value: %.2f, Max value: %.2f\r\n", min, max);
-
-
-        	if (abs(min) < max)
-        	{
-        		result_norm = max;
-        	}
-        	else
-        	{
-        		result_norm = abs(min);
-        	}
-
-        	printf("Value used for normalization formula: %.2f\r\n", result_norm);
-
-        	printf("Conversion, bias removal and hanning application\r\n");
-        	// Conversion waveform to float (-1 to 1), Remove DC bias (mean subtraction), applies Hanning window
-        	for (uint32_t idx = 0; idx < 124; idx++) {
-        	    float dst[FFT_SIZE];
-        	    static float mag[FFT_SIZE + 1];
-        	    double sum = 0;
-        	    static float* signal_chunk = mag; // remove pointer?
-
-        	    for (uint32_t i = 0; i < FFT_SIZE; i++) {
-        	        signal_chunk[i] = (waveform[idx * frame_step + i]);
-
-        	        signal_chunk[i] = (signal_chunk[i] / result_norm);
-
-        	        sum += signal_chunk[i];
-        	    }
-
-    			// Remove DC component
-    			float mean = (float)(sum / (double)FFT_SIZE);
-    			for (uint32_t i = 0; i < FFT_SIZE; i++) {
-    				signal_chunk[i] = signal_chunk[i] - mean;
-
-    				// Apply window function
-    				signal_chunk[i] *= hanning[i];
-    			}
-
-    			// Compute FFT
-    			arm_rfft_fast_f32(&fft, signal_chunk, dst, 0);
-
-    			// The first "complex" is actually to reals, X[0] and X[N/2]
-				float first_real = (dst[0] < 0.0f) ? (-1.0f * dst[0]) : dst[0];
-				float second_real = (dst[1] < 0.0f) ? (-1.0f * dst[1]) : dst[1];
-
-				// Take the magnitude for all the complex values in between
-				arm_cmplx_mag_f32(dst + 2, mag + 1, FFT_SIZE / 2);
-
-				// Fill in the two real numbers at 0 and N/2
-				mag[0] = first_real;
-				mag[128] = second_real;
-
-				for (int i = 0; i < BUFFER_SIZE; i++) {
-					float_waveform[i] = (float)waveform[i];  // Convert int16_t to float
+				// We read the contents of the file, save the info in the "audio_buffer" variable
+				// Charger le fichier WAV et vérifier mono/stéréo
+				// Charger le fichier WAV et vérifier mono/stéréo
+				if (read_wav_file("WAVE.WAV", stereo_waveform) != 0) {
+					printf("Erreur : Impossible de lire le fichier WAV\r\n");
+					return;
 				}
 
-				for (uint32_t i = 0; i < 129; i++) {
-					// We can't override waveform[129 * idx + 128] yet
-					// because we need it for the next iteration, so we need to store
-					// it separately
-					if (i < 128) {
-						float_waveform[128 * idx + i] = (mag[i] * 8.0f);
-					}
-					else {
-						last_ffts[idx] = (mag[i] * 8.0f);
+				// Vérification du format (Mono/Stéréo)
+				uint8_t is_stereo = (header.NumChannels == 2);
+				printf("Format audio : %s\r\n", is_stereo ? "Stéréo" : "Mono");
+
+				// Si le fichier est stéréo, on le convertit en mono en moyennant les canaux
+				if (is_stereo) {
+					for (uint32_t i = 0; i < BUFFER_SIZE; i++) {
+						waveform[i] = (stereo_waveform[2 * i] + stereo_waveform[2 * i + 1]) / 2;  // Moyenne des deux canaux
 					}
 				}
-			}
 
-			// Spectrogram formatting
-			float* input_tensor = float_waveform;
-			uint32_t input_tensor_len = 124 * 129;
+				// -------------------- NORMALISATION --------------------
+				printf("Normalisation de l'audio...\r\n");
 
-			for (uint32_t idx = 123; idx > 0; idx--){
-			    uint8_t tmp[128];
-			    memcpy(tmp, waveform + (idx * 128), 128);
-			    memcpy(waveform + (idx * 128 + idx), tmp, 128);
-			    waveform[idx * 128 + (idx - 1)] = last_ffts[idx - 1];
-        	}
+				// Trouver le min et le max
+				float min_val = 32767.0f;
+				float max_val = -32768.0f;
+
+				for (uint32_t i = 0; i < BUFFER_SIZE; i++) {
+					if (waveform[i] < min_val) min_val = waveform[i];
+					if (waveform[i] > max_val) max_val = waveform[i];
+				}
+
+				// Vérifier que les valeurs sont valides
+				printf("Min: %.2f, Max: %.2f\n", min_val, max_val);
+
+				// Calcul de la normalisation
+				float range = max_val - min_val;
+				if (range == 0) range = 1.0f;  // Éviter division par zéro
+
+				for (uint32_t i = 0; i < BUFFER_SIZE; i++) {
+					float_waveform[i] = 2.0f * (waveform[i] - min_val) / range - 1.0f; // Normalisation [-1,1]
+				}
+
+				// Vérification des valeurs normalisées
+				printf("Premières valeurs normalisées : ");
+				for (uint32_t i = 0; i < 10; i++) {
+					printf("%.6f ", float_waveform[i]);
+				}
+				printf("\r\n");
+
+				// -------------------- APPLICATION HANNING & FFT --------------------
+
+				// Création de la fenêtre de Hanning
+				static float32_t hanning_window[FFT_SIZE];
+				arm_hanning_f32(hanning_window, FFT_SIZE);
+
+				printf("Application de la fenêtre de Hanning et calcul FFT...;\r\n");
+
+				for (uint32_t idx = 0; idx < 124; idx++) {
+					float frame[FFT_SIZE];
+					float mag[FFT_SIZE / 2 + 1]; // Magnitude des valeurs complexes
+					float sum = 0.0f;
+
+					// Extraction et application de Hanning
+					for (uint32_t i = 0; i < FFT_SIZE; i++) {
+						frame[i] = float_waveform[idx * frame_step + i] * hanning_window[i];
+						sum += frame[i];
+					}
+
+					// Suppression du biais DC
+					float mean = sum / FFT_SIZE;
+					for (uint32_t i = 0; i < FFT_SIZE; i++) {
+						frame[i] -= mean;
+					}
 
 
-			// Save the spectrogram data in sd card
-			res = f_open(&file, "datanew.txt", FA_WRITE | FA_CREATE_ALWAYS);
-			if (res == FR_OK) {
-			    // Write the opening bracket
-			    f_write(&file, "[", 1, &bw);
-
-			    // Write the data
-			    char buffer[32];  // Increased buffer size for float values
-			    for (uint32_t i = 0; i < input_tensor_len; i++) {
-			        sprintf(buffer, "%.6f", input_tensor[i]);  // Convert float to string with 6 decimal places
-			        f_write(&file, buffer, strlen(buffer), &bw);
-			        if (i < input_tensor_len - 1) {
-			            f_write(&file, ", ", 2, &bw);
-			        }
-			    }
-
-			    // Write the closing bracket and newline
-			    f_write(&file, "]\n", 2, &bw);
-
-			    // Close the file
-			    f_close(&file);
-			} else {
-			    printf("Failed to open file!\r\n");
-			}
+					if (arm_rfft_fast_init_f32(&fft, FFT_SIZE) != ARM_MATH_SUCCESS) {
+						printf("Erreur : Échec de l'initialisation de la FFT !\r\n");
+						Error_Handler();
+					}
 
 
-			printf("Conversion, bias removal and hanning application OK\r\n");
+					// Calcul FFT
+					float dst[FFT_SIZE];
+					arm_rfft_fast_f32(&fft, frame, dst, 0);
 
-			for (uint32_t i = 0; i < AI_NETWORK_IN_1_SIZE; i++) {
-			    aiInData[i] = input_tensor[i];
-			}
-			printf("Running inference\r\n");
-			AI_Run(aiInData, aiOutData);
+					// Calcul de la magnitude des valeurs complexes
+					arm_cmplx_mag_f32(dst, mag, FFT_SIZE / 2 + 1);
 
-			uint32_t class = argmax(aiOutData, AI_NETWORK_OUT_1_SIZE);
-			printf("Detected Word: %s (Confidence: %8.6f)\r\n", activities[class], aiOutData[class]);
+					// Stockage dans le spectrogramme
+					for (uint32_t i = 0; i < FFT_SIZE / 2 + 1; i++) {
+						spectrogram[idx][i] = mag[i];
+					}
+				}
+
+				// -------------------- NORMALISATION DU SPECTROGRAMME --------------------
+
+				printf("Normalisation du spectrogramme...\r\n");
+				float min_spec = 1e6, max_spec = -1e6;
+
+				// Trouver min et max du spectrogramme
+				for (uint32_t i = 0; i < 124; i++) {
+					for (uint32_t j = 0; j < FFT_SIZE / 2 + 1; j++) {
+						if (spectrogram[i][j] < min_spec) min_spec = spectrogram[i][j];
+						if (spectrogram[i][j] > max_spec) max_spec = spectrogram[i][j];
+					}
+				}
+
+				float spec_range = max_spec - min_spec;
+				if (spec_range == 0) spec_range = 1.0f;
+
+				// Appliquer la normalisation
+				for (uint32_t i = 0; i < 124; i++) {
+					for (uint32_t j = 0; j < FFT_SIZE / 2 + 1; j++) {
+						spectrogram[i][j] = (spectrogram[i][j] - min_spec) / spec_range;
+					}
+				}
+
+				// Vérification des valeurs normalisées
+				printf("Premières valeurs normalisées du spectrogramme : ");
+				for (uint32_t i = 0; i < 10; i++) {
+					printf("%.6f ", spectrogram[0][i]);
+				}
+				printf("\r\n");
+
+				// -------------------- SAUVEGARDE SUR SD --------------------
+
+				printf("Sauvegarde du spectrogramme...\r\n");
+
+				res = f_open(&file, "spectrogram_data.txt", FA_WRITE | FA_CREATE_ALWAYS);
+				if (res == FR_OK) {
+					f_write(&file, "[", 1, &bw);
+					char buffer[32];
+
+					for (uint32_t i = 0; i < 124; i++) {
+						for (uint32_t j = 0; j < FFT_SIZE / 2 + 1; j++) {
+							sprintf(buffer, "%.6f", spectrogram[i][j]);
+							f_write(&file, buffer, strlen(buffer), &bw);
+							if (i < 123 || j < FFT_SIZE / 2) {
+								f_write(&file, ", ", 2, &bw);
+							}
+						}
+					}
+
+					f_write(&file, "]\n", 2, &bw);
+					f_close(&file);
+					printf("Sauvegarde réussie !\r\n");
+				} else {
+					printf("Échec de la sauvegarde du spectrogramme !\r\n");
+				}
+
+				// -------------------- PRÉPARATION POUR L'IA --------------------
+
+				// Mise à plat du spectrogramme dans aiInData
+				for (uint32_t i = 0; i < 124; i++) {
+					for (uint32_t j = 0; j < FFT_SIZE / 2 + 1; j++) {
+						aiInData[i * (FFT_SIZE / 2 + 1) + j] = spectrogram[i][j];
+					}
+				}
+
+				// Vérification avant passage au modèle
+				printf("Premières valeurs envoyées au modèle : ");
+				for (uint32_t i = 0; i < 10; i++) {
+					printf("%.6f ", aiInData[i]);
+				}
+				printf("\r\n");
+
+				// -------------------- INFÉRENCE AVEC IA --------------------
+				printf("Exécution de l'inférence...\r\n");
+				AI_Run(aiInData, aiOutData);
+
+				// -------------------- SOFTMAX ET PRÉDICTION --------------------
+				softmax(aiOutData, AI_NETWORK_OUT_1_SIZE);
+
+				// Vérifier la somme des probabilités
+				float sum_softmax = 0;
+				for (uint32_t i = 0; i < AI_NETWORK_OUT_1_SIZE; i++) {
+					sum_softmax += aiOutData[i];
+				}
+				printf("Somme des probabilités Softmax : %f\r\n", sum_softmax);
+
+				// Trouver la classe avec la probabilité max
+				uint32_t class_idx = argmax(aiOutData, AI_NETWORK_OUT_1_SIZE);
+				printf("Mot détecté : %s (Confiance : %.2f%%)\r\n", activities[class_idx], aiOutData[class_idx] * 100);
         }
 
         HAL_Delay(100);  // Small delay for stability
@@ -758,6 +798,32 @@ static uint32_t argmax(const float * values, uint32_t len)
   return max_index;
 }
 
+void softmax(float *values, uint32_t len) {
+    // Find the maximum value in the logits for numerical stability
+    float max_val = values[0];
+    for (uint32_t i = 1; i < len; i++) {
+        if (values[i] > max_val) {
+            max_val = values[i];
+        }
+    }
+
+    // Subtract the max value from all logits to prevent overflow/underflow
+    for (uint32_t i = 0; i < len; i++) {
+        values[i] -= max_val;
+    }
+
+    // Compute the sum of exponentiated values
+    float sum = 0.0f;
+    for (uint32_t i = 0; i < len; i++) {
+        values[i] = expf(values[i]);  // Exponentiate each value
+        sum += values[i];             // Sum the exponentiated values
+    }
+
+//    // Normalize by dividing each value by the sum to get probabilities
+//    for (uint32_t i = 0; i < len; i++) {
+//        values[i] /= sum;
+//    }
+}
 /* USER CODE END 4 */
 
 /**
