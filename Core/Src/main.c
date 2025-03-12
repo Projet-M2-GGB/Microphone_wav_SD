@@ -364,25 +364,25 @@ int main(void)
 				// -------------------- NORMALISATION DU SPECTROGRAMME --------------------
 
 				printf("Normalisation du spectrogramme...\r\n");
-				float min_spec = 1e6, max_spec = -1e6;
-
-				// Trouver min et max du spectrogramme
-				for (uint32_t i = 0; i < 124; i++) {
-					for (uint32_t j = 0; j < FFT_SIZE / 2 + 1; j++) {
-						if (spectrogram[i][j] < min_spec) min_spec = spectrogram[i][j];
-						if (spectrogram[i][j] > max_spec) max_spec = spectrogram[i][j];
-					}
-				}
-
-				float spec_range = max_spec - min_spec;
-				if (spec_range == 0) spec_range = 1.0f;
-
-				// Appliquer la normalisation
-				for (uint32_t i = 0; i < 124; i++) {
-					for (uint32_t j = 0; j < FFT_SIZE / 2 + 1; j++) {
-						spectrogram[i][j] = (spectrogram[i][j] - min_spec) / spec_range;
-					}
-				}
+//				float min_spec = 1e6, max_spec = -1e6;
+//
+//				// Trouver min et max du spectrogramme
+//				for (uint32_t i = 0; i < 124; i++) {
+//					for (uint32_t j = 0; j < FFT_SIZE / 2 + 1; j++) {
+//						if (spectrogram[i][j] < min_spec) min_spec = spectrogram[i][j];
+//						if (spectrogram[i][j] > max_spec) max_spec = spectrogram[i][j];
+//					}
+//				}
+//
+//				float spec_range = max_spec - min_spec;
+//				if (spec_range == 0) spec_range = 1.0f;
+//
+//				// Appliquer la normalisation
+//				for (uint32_t i = 0; i < 124; i++) {
+//					for (uint32_t j = 0; j < FFT_SIZE / 2 + 1; j++) {
+//						spectrogram[i][j] = (spectrogram[i][j] - min_spec) / spec_range;
+//					}
+//				}
 
 				// Vérification des valeurs normalisées
 				printf("Premières valeurs normalisées du spectrogramme : ");
@@ -723,6 +723,13 @@ void ReadWAVFileInfo(const char *filename) {
 int read_wav_file(const char *filename, int16_t *buffer) {
     FIL file;
     UINT bytes_read;
+
+//    FRESULT res = f_mount(&SDFatFS, (TCHAR const *)SDPath, 0);
+//    if (res != FR_OK) {
+//        printf("Error: Failed to mount SD card (Code: %d).\r\n", res);
+//        Error_Handler();
+//    }
+
     FRESULT result = f_open(&file, filename, FA_READ);
 
     if (result != FR_OK) {

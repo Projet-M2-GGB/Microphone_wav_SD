@@ -2,7 +2,7 @@
 ../Drivers/CMSIS/Include/core_cm7.h:2248:22:SCB_DisableICache	1
 ../Drivers/CMSIS/Include/core_cm7.h:2281:22:SCB_EnableDCache	3
 ../Drivers/CMSIS/Include/core_cm7.h:2319:22:SCB_DisableDCache	3
-../Core/Src/main.c:170:5:main	36
+../Core/Src/main.c:170:5:main	29
 ../Core/Src/main.c:475:6:SystemClock_Config	4
 ../Core/Src/main.c:527:1:__io_putchar	1
 ../Core/Src/main.c:539:6:HAL_GPIO_EXTI_Callback	3
@@ -13,9 +13,9 @@
 ../Core/Src/main.c:631:6:ReadWAVFileInfo_fromSD	5
 ../Core/Src/main.c:678:6:ReadWAVFileInfo	4
 ../Core/Src/main.c:723:5:read_wav_file	3
-../Core/Src/main.c:749:6:arm_hanning_f32	2
-../Core/Src/main.c:761:13:AI_Init	2
-../Core/Src/main.c:778:13:AI_Run	2
-../Core/Src/main.c:795:17:argmax	3
-../Core/Src/main.c:808:6:softmax	5
-../Core/Src/main.c:840:6:Error_Handler	1
+../Core/Src/main.c:756:6:arm_hanning_f32	2
+../Core/Src/main.c:768:13:AI_Init	2
+../Core/Src/main.c:785:13:AI_Run	2
+../Core/Src/main.c:802:17:argmax	3
+../Core/Src/main.c:815:6:softmax	5
+../Core/Src/main.c:847:6:Error_Handler	1
