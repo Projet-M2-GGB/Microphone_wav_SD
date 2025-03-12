@@ -30,6 +30,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "waverecorder.h"
+
 #include <stdio.h>
 
 #include "ai_datatypes_defines.h"
@@ -44,21 +45,6 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef struct __attribute__((packed)) {
-    char ChunkID[4];
-    uint32_t ChunkSize;
-    char Format[4];
-    char Subchunk1ID[4];
-    uint32_t Subchunk1Size;
-    uint16_t AudioFormat;
-    uint16_t NumChannels;
-    uint32_t SampleRate;
-    uint32_t ByteRate;
-    uint16_t BlockAlign;
-    uint16_t BitsPerSample;
-    char Subchunk2ID[4];
-    uint32_t Subchunk2Size;
-} WAV_Header;
 
 /* USER CODE END PTD */
 
@@ -89,7 +75,6 @@ BYTE workBuffer_init[WORK_BUFFER_SIZE];
 extern FIL WavFile;
 FRESULT res;
 UINT bytesRead, bw;
-WAV_Header header;
 FIL file;
 
 /* AI model RELATED VARIABLES */
