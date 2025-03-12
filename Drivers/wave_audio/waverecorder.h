@@ -27,7 +27,7 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Defines for the Audio recording process */
-#define DEFAULT_TIME_REC                     1  /* Recording time in second (default: 30s) */
+#define DEFAULT_TIME_REC                     1/* Recording time in second (default: 30s) */
 
 #define REC_WAVE_NAME "Wave.wav"
 
