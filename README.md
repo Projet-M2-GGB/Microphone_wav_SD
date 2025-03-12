@@ -1,99 +1,62 @@
-Audio Recognition with AI Model and WAV File Processing
-Overview
+# Audio Recognition with AI Model and WAV File Processing
 
-This project enables recording audio, processing the recorded WAV file, and performing activity recognition using a pre-trained AI model on an STM32 microcontroller platform. The system uses a microphone to capture audio, saves the data to an SD card, and then processes it for recognition via a neural network model. The system is designed to recognize specific activities like "down," "go," "left," "right," "stop," and "up."
-Features
+## Overview
+This project enables recording audio, processing the recorded WAV file, and performing activity recognition using a pre-trained AI model on an STM32 microcontroller platform. The system captures audio using a microphone, saves the data to an SD card, and processes it for recognition via a neural network model. The system is designed to recognize specific activities like "down," "go," "left," "right," "stop," and "up."
 
-    Audio Recording: Records audio in WAV format using the STM32 audio interface.
-    AI Processing: Uses a pre-trained neural network to classify activities based on recorded audio.
-    SD Card Integration: Supports SD card operations for storing recorded audio files and logs.
-    Real-time Processing: Detects button presses to trigger audio recording and recognition, with LED feedback.
-    FFT and Mel Spectrogram: Applies Fast Fourier Transform (FFT) and Mel spectrograms for feature extraction.
+## Features
+- **Audio Recording**: Records audio in WAV format using the STM32 audio interface.
+- **AI Processing**: Uses a pre-trained neural network to classify activities based on recorded audio.
+- **SD Card Integration**: Supports SD card operations for storing recorded audio files and logs.
+- **Real-time Processing**: Detects button presses to trigger audio recording and recognition, with LED feedback.
+- **FFT and Spectrogram**: Applies Fast Fourier Transform (FFT) and spectrograms for feature extraction.
+- **UART Debugging**: Sends system status and results over UART for monitoring.
 
-Hardware Requirements
+## Hardware Requirements
+- STM32 microcontroller (e.g., STM32F746G Discovery board)
+- SD Card 
+- User button for triggering recording
+- UART for debug messages
+- nRF24L01 radio module
 
-    STM32 microcontroller (e.g., STM32F746G)
-    Audio input device (e.g., microphone)
-    SD Card (formatted and mounted)
-    LED for visual feedback
-    User button for triggering recording
-    UART for debug messages
+## Software Requirements
+- STM32 HAL library
+- FatFS library for SD card operations
+- AI model integration (AI network for classification)
+- DSP CMSIS functions (FFT and Mel spectrogram computation)
+- BSP waverecorder and SDRAM
+- STM32CubeIDE for development
 
-Software Requirements
+## Key Functions
+### AI Model Functions
+- **AI_Init()**: Initializes the AI model, loading weights and biases and setting up input/output buffers.
+- **AI_Process()**: Runs inference on processed audio data and returns the predicted activity.
 
-    STM32 HAL library
-    FatFS library for SD card operations
-    AI model integration (AI network for classification)
-    DSP functions (FFT and Mel spectrogram)
+### Audio Processing Functions
+- **ReadWAVFileInfo()**: Reads the WAV file header to extract metadata (e.g., sample rate, channels).
+- **normalize_audio()**: Normalizes the audio data to prepare it for AI processing.
+- **apply_fft()**: Computes the FFT to extract frequency-domain features.
+- **calculate_mel_spectrogram()**: Converts FFT output into a Mel spectrogram for AI model input.
 
-Setup Instructions
+### SD Card and Logging Functions
+- **SDCard_InitAndFormat()**: Initializes and formats the SD card for file storage.
+- **new_log()**: Creates a log file on the SD card and writes relevant content.
 
-    Hardware Setup:
-        Insert an SD card into the STM32 board.
-    Software Setup:
-        Clone the repository and open the project in STM32CubeIDE.
-        Build and flash the program to the STM32 microcontroller.
-        Ensure that the necessary peripheral drivers for SAI (Serial Audio Interface), SD card, and UART are properly configured in STM32CubeMX.
+### User Interaction Functions
+- **check_button_release()**: Monitors the button press and resets the `button_pressed` flag when released.
 
-Key Functions
-1. AI_Init()
+## Workflow
+1. **SD Card Initialization**: The system initializes and formats the SD card if necessary.
+2. **Audio Recording**: Waits for a button press; on press, recording starts and saves audio as a WAV file.
+3. **Audio Processing**: Processes the recorded file, normalizing audio and computing a Mel spectrogram.
+4. **Activity Recognition**: The AI model predicts the activity and outputs the result via UART.
+5. **Message transmission**: The command is sent via the nRF24L01 radio module.
 
-Initializes the AI model by loading weights and biases, and setting up the input and output buffers.
+## Troubleshooting
+- **SD Card Issues**: Ensure the SD card is properly inserted and formatted (FAT32 recommended).
+- **Audio Processing Errors**: If preprocessing fails, verify that the WAV file format is correct (16kHz, stereo, 16-bit).
+- **AI Model Errors**: If AI model initialization fails, check that the weights and activation buffers are correctly loaded.
+- **Low Accuracy**: Ensure the audio is clear and properly processed before being fed into the AI model.
 
-2. AI_Process()
-
-Takes in processed audio data, runs it through the AI model, and returns the predicted activity.
-
-3. ReadWAVFileInfo()
-
-Reads the WAV file header to gather metadata about the audio file (e.g., sample rate, number of channels).
-
-4. normalize_audio()
-
-Normalizes the audio data to prepare it for AI processing.
-
-5. apply_fft()
-
-Applies Fast Fourier Transform (FFT) to the audio data to extract frequency-domain features.
-
-6. calculate_mel_spectrogram()
-
-Computes the Mel spectrogram from the FFT output, which is used as input for the AI model.
-
-7. SDCard_InitAndFormat()
-
-Initializes and formats the SD card, preparing it for file storage.
-
-8. new_log()
-
-Creates a new log file on the SD card and writes content to it.
-
-9. check_button_release()
-
-Checks for the button press and resets the button_pressed flag when the button is released.
-
-Workflow
-
-    SD Card Initialization: The system initializes the SD card and formats it if necessary.
-    Audio Recording: The system waits for the button press. Once the button is pressed, audio recording begins, and the file is saved in WAV format.
-    Audio Processing: Once the recording stops, the WAV file is processed. The audio is normalized, transformed into a Mel spectrogram, and fed into the AI model.
-    Activity Recognition: The AI model predicts the activity based on the processed audio data, and the result is printed to the UART terminal.
-    LED Feedback: During recording, the LED is toggled to visually indicate that the system is active.
-
-Example Output
-
-SD card init...
-AI model initialized successfully.
-Waiting for input to record...
-Button pressed...
-Recording started...
-Recording stopped.
-Reading WAV file info...
-Predicted activity: go (confidence: 0.92)
-
-Troubleshooting
-
-    SD Card Issues: Ensure the SD card is properly inserted and formatted. Use a reliable SD card.
-    Audio Processing Errors: If preprocessing fails, verify the WAV file format (16kHz, mono, 16-bit).
-    AI Model Errors: If the AI model initialization fails, check that the weights and activation buffers are correctly loaded.
+## License
+This project is open-source and available under the MIT License.
 
