@@ -30,19 +30,22 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "waverecorder.h"
 
+/* General INCLUDES */
 #include <stdio.h>
-
+/* Voice recording INCLUDES */
+#include "waverecorder.h"
+/* Cube AI INCLUDES */
 #include "ai_datatypes_defines.h"
 #include "ai_platform.h"
 #include "network.h"
 #include "network_data.h"
-
+/* Signal processing INCLUDES */
 #include "arm_math.h"
 #include "dsp/transform_functions.h"
-
+/* Wireless transmission INCLUDES */
 #include "MY_NRF24.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,19 +55,11 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define BUFFER_SIZE 16000  // 1 second of audio at 16kHz
-#define FFT_SIZE 256  // Choose a suitable size based on your model's input
-#define NUM_MEL_BINS 40  // Optional: if using Mel spectrograms
 
-typedef struct  {
-	uint8_t Droite;
-	uint8_t Gauche;
-	uint8_t Stop;
-	uint8_t Go_1;
-	uint8_t Back;
-} Data_Package;
+/* Signal processing INCLUDES */
+#define BUFFER_SIZE 16000  // Same as sample rate, variables store 16000 values.
+#define FFT_SIZE 256
 
-Data_Package package = {0, 0, 0, 0, 0}; // Initialize all members to 0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -76,12 +71,12 @@ Data_Package package = {0, 0, 0, 0, 0}; // Initialize all members to 0
 
 /* USER CODE BEGIN PV */
 
-/* Audio recording RELATED VARIABLES */
+/* Audio recording VARIABLES */
 AUDIO_ApplicationTypeDef appli_state = APPLICATION_IDLE;
 AUDIO_PLAYBACK_StateTypeDef AudioState;
 AUDIO_ErrorTypeDef  status;
 
-/* SD card RELATED VARIABLES */
+/* SD card VARIABLES */
 #define WORK_BUFFER_SIZE 512
 BYTE workBuffer_init[WORK_BUFFER_SIZE];
 extern FIL WavFile;
@@ -89,7 +84,7 @@ FRESULT res;
 UINT bytesRead, bw;
 FIL file;
 
-/* AI model RELATED VARIABLES */
+/* AI model VARIABLES */
 ai_handle network;
 float aiInData[AI_NETWORK_IN_1_SIZE];
 float aiOutData[AI_NETWORK_OUT_1_SIZE];
@@ -100,7 +95,7 @@ const char* activities[AI_NETWORK_OUT_1_SIZE] = {
 ai_buffer * ai_input;
 ai_buffer * ai_output;
 
-/* Audio processing RELATED VARIABLES */
+/* Audio processing VARIABLES */
 static int16_t stereo_waveform[BUFFER_SIZE*2];
 static int16_t waveform[BUFFER_SIZE] __attribute__((section(".sdram")));
 static float float_waveform[BUFFER_SIZE] __attribute__((section(".sdram")));
@@ -114,7 +109,6 @@ arm_rfft_fast_instance_f32 fft;
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
-
 /* Needed to send messages easier to terminal for debugging */
 #ifdef __GNUC__
 /* With GCC/RAISONANCE, small printf (option LD Linker-
@@ -124,7 +118,6 @@ set to 'Yes') calls __io_putchar() */
 #else
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
 #endif /* __GNUC__ */
-/* =========================================================*/
 
 /* Needed to initialize the SD Card */
 void SDCard_InitAndFormat(void);
@@ -159,7 +152,6 @@ char stop[32] = "stop";
 char go[32] = "go";
 char back[32] = "down";
 
-bool send_data(Data_Package *data);
 
 volatile uint8_t button_pressed_right = 0;
 volatile uint8_t button_pressed_left = 0;
@@ -215,7 +207,7 @@ int main(void)
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
 
-  /* We format the SD card */
+  /* Init */
   printf("SD card init...\r\n");
   SDCard_InitAndFormat();
   BSP_SDRAM_Init();
@@ -224,24 +216,23 @@ int main(void)
   NRF24_begin(GPIOA, CSN_PIN_Pin, CE_PIN_Pin, hspi2);
   nrf24_DebugUART_Init(huart1);
 
+  /* Set values of arrays to 0 for a clean start */
   memset(waveform, 0, sizeof(waveform));
   memset(stereo_waveform, 0, sizeof(stereo_waveform));
   memset(float_waveform, 0, sizeof(float_waveform));
   memset(spectrogram, 0, sizeof(spectrogram));
 
-  // We print some basic info into our serial monitor
-  //printRadioSettings();
-  // Transmit - NO ACK // We transmit info without needing a receptor
-  // Good practice : in case we were in receive mode just before
+  /* Wireless module config */
+
+  /* Good practice : in case we were in receive mode just before */
   NRF24_stopListening();
-  // We open the writing pipe (hex address)
+  /* We open the writing pipe (hex address) */
   NRF24_openWritingPipe(TxpipeAddrs);
-  // We turn off ack and select a channel 0 - 127
+  /* We turn off ack and select a channel 0 - 127 */
   NRF24_setAutoAck(false);
   NRF24_setChannel(52);
-  // We set a payload size of 32 bytes   (max)
+  /* We set a payload size of 32 bytes   (max) */
   NRF24_setPayloadSize(32);
-  //HAL_GPIO_TogglePin(Green_LED_GPIO_Port, Green_LED_Pin);
 
   /* USER CODE END 2 */
 
@@ -249,6 +240,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
     while (1)
     {
+    	/* We wait for the user button on the Discovery board to be pressed (BLUE BUTTON) */
         check_button_release();
         printf("Waiting for input to record...\r\n");
         HAL_Delay(1000);
@@ -256,6 +248,7 @@ int main(void)
         SCB_DisableDCache();
         SCB_DisableICache();
 
+        /* If the button is pressed, execute main program */
         if (button_pressed == 1)
         {
             /* If the program is not already recording... */
@@ -278,24 +271,25 @@ int main(void)
                 printf("Recording stopped.\r\n");
             }
 
-
             /* Audio processing step*/
 
+            	/* We read the .wav file stored in the SD card and assign its content to an array */
 				if (read_wav_file("WAVE.WAV", stereo_waveform) != 0) {
-					printf("Erreur : Impossible de lire le fichier WAV\r\n");
+					printf("ERROR : cannot read .wav file\r\n");
 					return;
 				}
 
-				// Si le fichier est stéréo, on le convertit en mono en moyennant les canaux
+				/* Stereo to mono audio transformation */
 				for (uint32_t i = 0; i < BUFFER_SIZE; i++) {
 					waveform[i] = (stereo_waveform[2 * i] + stereo_waveform[2 * i + 1]) / 2;  // Moyenne des deux canaux
 				}
 
 
-				// -------------------- NORMALISATION --------------------
-				printf("Normalisation de l'audio...\r\n");
+				// -------------------- NORMALIZATION --------------------
+				printf("Audio normalization...\r\n");
 
-				// Trouver le min et le max
+				/* Find min and max */
+
 				float min_val = 32767.0f;
 				float max_val = -32768.0f;
 
@@ -304,72 +298,69 @@ int main(void)
 					if (waveform[i] > max_val) max_val = waveform[i];
 				}
 
-				// Vérifier que les valeurs sont valides
+				/* Display the found values */
 				printf("Min: %.2f, Max: %.2f\n", min_val, max_val);
 
-				// Calcul de la normalisation
+				/* Normalization process */
 				float range = max_val - min_val;
-				if (range == 0) range = 1.0f;  // Éviter division par zéro
+				if (range == 0) range = 1.0f;  // To not divide by 0
 
 				for (uint32_t i = 0; i < BUFFER_SIZE; i++) {
-					float_waveform[i] = 2.0f * (waveform[i] - min_val) / range - 1.0f; // Normalisation [-1,1]
+					float_waveform[i] = 2.0f * (waveform[i] - min_val) / range - 1.0f; // Normalization [-1,1]
 				}
 
-				// Vérification des valeurs normalisées
+				/* Display some values */
 				printf("Premières valeurs normalisées : ");
 				for (uint32_t i = 0; i < 10; i++) {
 					printf("%.6f ", float_waveform[i]);
 				}
 				printf("\r\n");
 
-				// -------------------- APPLICATION HANNING & FFT --------------------
+				// -------------------- HANNING & FFT --------------------
 
-				// Création de la fenêtre de Hanning
+				/* Hanning window creation */
 				static float32_t hanning_window[FFT_SIZE];
 				arm_hanning_f32(hanning_window, FFT_SIZE);
 
-				printf("Application de la fenêtre de Hanning et calcul FFT...;\r\n");
-
 				for (uint32_t idx = 0; idx < 124; idx++) {
 					float frame[FFT_SIZE];
-					float mag[FFT_SIZE / 2 + 1]; // Magnitude des valeurs complexes
+					float mag[FFT_SIZE / 2 + 1]; // Complex values magnitude
 					float sum = 0.0f;
 
-					// Extraction et application de Hanning
+					/* Hanning extraction and application */
 					for (uint32_t i = 0; i < FFT_SIZE; i++) {
 						frame[i] = float_waveform[idx * frame_step + i] * hanning_window[i];
 						sum += frame[i];
 					}
 
-					// Suppression du biais DC
+					/* Suppression of the DC bias */
 					float mean = sum / FFT_SIZE;
 					for (uint32_t i = 0; i < FFT_SIZE; i++) {
 						frame[i] -= mean;
 					}
 
-
+					/* Declare RFFT */
 					if (arm_rfft_fast_init_f32(&fft, FFT_SIZE) != ARM_MATH_SUCCESS) {
 						printf("Erreur : Échec de l'initialisation de la FFT !\r\n");
 						Error_Handler();
 					}
 
-
-					// Calcul FFT
+					/* Compute RFFT */
 					float dst[FFT_SIZE];
 					arm_rfft_fast_f32(&fft, frame, dst, 0);
 
-					// Calcul de la magnitude des valeurs complexes
+					/* Processing of the complex values magnitudes */
 					arm_cmplx_mag_f32(dst, mag, FFT_SIZE / 2 + 1);
 
-					// Stockage dans le spectrogramme
+					/* Fill the spectrogram array */
 					for (uint32_t i = 0; i < FFT_SIZE / 2 + 1; i++) {
 						spectrogram[idx][i] = mag[i];
 					}
 				}
 
-				// -------------------- SAUVEGARDE SUR SD (debug, decommenter si necessaire) --------------------
+				// -------------------- SD card save --------------------
 
-//				printf("Sauvegarde du spectrogramme...\r\n");
+//				printf("Saving spectrogram...\r\n");
 //
 //				res = f_open(&file, "data.txt", FA_WRITE | FA_CREATE_ALWAYS);
 //				if (res == FR_OK) {
@@ -395,46 +386,46 @@ int main(void)
 //
 //				    f_write(&file, "\n]", 2, &bw);
 //				    f_close(&file);
-//				    printf("Sauvegarde réussie !\r\n");
+//				    printf("Saving success !\r\n");
 //				} else {
-//				    printf("Échec de la sauvegarde du spectrogramme !\r\n");
+//				    printf("Saving FAILED !\r\n");
 //				}
 
-				// -------------------- PRÉPARATION POUR L'IA --------------------
+				// -------------------- AI format preparation --------------------
 
-				// Mise à plat du spectrogramme dans aiInData
+				/* Fit spectrogram into aiInData */
 				for (uint32_t i = 0; i < 124; i++) {
 					for (uint32_t j = 0; j < FFT_SIZE / 2 + 1; j++) {
 						aiInData[i * (FFT_SIZE / 2 + 1) + j] = spectrogram[i][j];
 					}
 				}
 
-				// Vérification avant passage au modèle
+				/* Vérification avant passage au modèle */
 				printf("Premières valeurs envoyées au modèle : ");
 				for (uint32_t i = 0; i < 10; i++) {
 					printf("%.6f ", aiInData[i]);
 				}
 				printf("\r\n");
 
-				// -------------------- INFÉRENCE AVEC IA --------------------
-				printf("Exécution de l'inférence...\r\n");
+				// -------------------- INFERENCE --------------------
+				printf("Inference...\r\n");
 				AI_Run(aiInData, aiOutData);
 
-				// -------------------- SOFTMAX ET PRÉDICTION --------------------
+				// -------------------- SOFTMAX AND PREDICTION --------------------
 				softmax(aiOutData, AI_NETWORK_OUT_1_SIZE);
 
-				// Vérifier la somme des probabilités
+				/* Check sum of probabilities */
 				float sum_softmax = 0;
 				for (uint32_t i = 0; i < AI_NETWORK_OUT_1_SIZE; i++) {
 					sum_softmax += aiOutData[i];
 				}
-				printf("Somme des probabilités Softmax : %f\r\n", sum_softmax);
+				printf("Softmax probability sum : %f\r\n", sum_softmax);
 
-				// Trouver la classe avec la probabilité max
+				/* Pick the class with the highest probability */
 				uint32_t class_idx = argmax(aiOutData, AI_NETWORK_OUT_1_SIZE);
-				printf("Mot détecté : %s (Confiance : %.2f%%)\r\n", activities[class_idx], aiOutData[class_idx] * 100);
+				printf("Detected command : %s (Confidence : %.2f%%)\r\n", activities[class_idx], aiOutData[class_idx] * 100);
 
-				// Map the detected word to the correct command
+				/* Map the detected word to the correct command */
 				const char* command_to_send = NULL;
 
 				if (strcmp(activities[class_idx], "down") == 0) {
@@ -453,31 +444,15 @@ int main(void)
 				    command_to_send = stop;
 				    button_pressed_stop = 0;
 				} else if (strcmp(activities[class_idx], "up") == 0) {
-				    command_to_send = stop;  // Not sure if "up" should also send "Stop"
+				    command_to_send = stop;
 				    button_pressed_stop = 0;
 				}
 
-				// Send the mapped command
+				/* Send the mapped command */
 				if (command_to_send != NULL) {
 				    HAL_GPIO_send_command(command_to_send);
 				}
 
-//				bool result = NRF24_write((const void*)myTxData, sizeof(myTxData));
-//
-//				if (result) {
-//				    // Transmission successful
-//				    printf("Message sent: %s\r\n", myTxData);
-//				} else {
-//				    // Transmission failed
-//				    printf("Message transmission failed\r\n");
-//
-//				    // Debugging: Check the status and observe_tx
-//				    uint8_t status;
-//				    uint8_t observe_tx;
-//				    NRF24_read_registerN(REG_OBSERVE_TX, &observe_tx, 1);
-//				    status = NRF24_get_status();
-//				    printf("Status Register: 0x%02X\r\n", status);
-//				    printf("TX Observe Register: 0x%02X\r\n", observe_tx);
 				}
         }
 
@@ -554,7 +529,6 @@ of transmission */
 HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 100);
 return ch;
 }
-/* ======================================================== */
 
 
 /* User button interruption and variable change */
@@ -569,7 +543,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  	  printf("Button pressed...\r\n");
       }
 }
-/* ======================================================== */
 
 
 /* Used to verify the state of the button */
@@ -577,7 +550,6 @@ void check_button_release()
 {
     if (HAL_GPIO_ReadPin(GPIOI, USR_BTN_Pin) == GPIO_PIN_RESET) button_pressed = 0;
 }
-/* ======================================================== */
 
 
 /* Used to initialize the SD card */
@@ -607,8 +579,8 @@ void SDCard_InitAndFormat(void) {
 
     printf("SD card initialized and formatted successfully.\r\n");
 }
-/* ======================================================== */
 
+/* Used to read the wav file in the SD card and store its content inside an array */
 int read_wav_file(const char *filename, int16_t *buffer) {
     FIL file;
     UINT bytes_read;
@@ -635,7 +607,7 @@ int read_wav_file(const char *filename, int16_t *buffer) {
     return 0;  // Success
 }
 
-
+/* Used for signal processing : Hanning window formula */
 void arm_hanning_f32(float32_t * pDst, uint32_t blockSize) {
    float32_t k = 2.0f / ((float32_t) blockSize);
    float32_t w;
@@ -648,6 +620,7 @@ void arm_hanning_f32(float32_t * pDst, uint32_t blockSize) {
    }
 }
 
+/* Used for initializing the AI model */
 static void AI_Init(void)
 {
   ai_error err;
@@ -664,7 +637,7 @@ static void AI_Init(void)
   ai_output = ai_network_outputs_get(network, NULL);
 }
 
-
+/* Used to send an input to the AI model, and get an answer */
 static void AI_Run(float *pIn, float *pOut)
 {
   ai_i32 batch;
@@ -682,6 +655,7 @@ static void AI_Run(float *pIn, float *pOut)
   }
 }
 
+/* Used to pick the highest probability result of the AI model */
 static uint32_t argmax(const float * values, uint32_t len)
 {
   float max_value = values[0];
@@ -695,6 +669,7 @@ static uint32_t argmax(const float * values, uint32_t len)
   return max_index;
 }
 
+/* Used for probability calculation */
 void softmax(float *values, uint32_t len) {
     // Find the maximum value in the logits for numerical stability
     float max_val = values[0];
@@ -717,6 +692,7 @@ void softmax(float *values, uint32_t len) {
     }
 }
 
+/* Used for message transmission */
 void HAL_GPIO_send_command(const char* command) // Fonction de transmission des commandes
 {
     if (strcmp(command, droite) == 0 && button_pressed_right == 0) {

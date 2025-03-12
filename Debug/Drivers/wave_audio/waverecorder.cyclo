@@ -1,0 +1,7 @@
+../Drivers/wave_audio/waverecorder.c:75:20:AUDIO_REC_Start	5
+../Drivers/wave_audio/waverecorder.c:132:20:AUDIO_REC_Process	10
+../Drivers/wave_audio/waverecorder.c:227:6:BSP_AUDIO_IN_TransferComplete_CallBack	3
+../Drivers/wave_audio/waverecorder.c:249:6:BSP_AUDIO_IN_HalfTransfer_CallBack	3
+../Drivers/wave_audio/waverecorder.c:276:17:WavProcess_EncInit	2
+../Drivers/wave_audio/waverecorder.c:304:17:WavProcess_HeaderInit	1
+../Drivers/wave_audio/waverecorder.c:389:17:WavProcess_HeaderUpdate	1
