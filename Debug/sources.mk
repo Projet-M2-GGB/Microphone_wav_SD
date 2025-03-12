@@ -44,6 +44,7 @@ Drivers/BSP/Components/ts3510 \
 Drivers/BSP/Components/wm8994 \
 Drivers/BSP/STM32746G-Discovery \
 Drivers/STM32F7xx_HAL_Driver/Src \
+Drivers/nrf24L01 \
 Drivers/wave_audio \
 FATFS/App \
 FATFS/Target \
