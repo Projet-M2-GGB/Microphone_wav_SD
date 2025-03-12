@@ -23,6 +23,7 @@
 #include "fatfs.h"
 #include "sai.h"
 #include "sdmmc.h"
+#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 #include "fmc.h"
@@ -41,6 +42,7 @@
 #include "arm_math.h"
 #include "dsp/transform_functions.h"
 
+#include "MY_NRF24.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,6 +55,16 @@
 #define BUFFER_SIZE 16000  // 1 second of audio at 16kHz
 #define FFT_SIZE 256  // Choose a suitable size based on your model's input
 #define NUM_MEL_BINS 40  // Optional: if using Mel spectrograms
+
+typedef struct  {
+	uint8_t Droite;
+	uint8_t Gauche;
+	uint8_t Stop;
+	uint8_t Go_1;
+	uint8_t Back;
+} Data_Package;
+
+Data_Package package = {0, 0, 0, 0, 0}; // Initialize all members to 0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -127,11 +139,33 @@ static void AI_Run(float *pIn, float *pOut);
 static uint32_t argmax(const float * values, uint32_t len);
 void softmax(float *values, uint32_t len);
 
+/* Wireless transmission */
+void HAL_GPIO_send_command(const char* command);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+/* Wireless transmission RELATED VARIABLES */
 volatile uint8_t button_pressed = 0;
+
+uint64_t TxpipeAddrs = 0x11223344AA;
+char myTxData[32] = "Hello world!";
+char myRxData[32];
+
+char droite[32] = "right";
+char gauche[32] = "left";
+char stop[32] = "stop";
+char go[32] = "go";
+char back[32] = "down";
+
+bool send_data(Data_Package *data);
+
+volatile uint8_t button_pressed_right = 0;
+volatile uint8_t button_pressed_left = 0;
+volatile uint8_t button_pressed_stop = 0;
+volatile uint8_t button_pressed_go = 0;
+volatile uint8_t button_pressed_back = 0;
 /* USER CODE END 0 */
 
 /**
@@ -178,7 +212,7 @@ int main(void)
   MX_SDMMC1_SD_Init();
   MX_CRC_Init();
   MX_FMC_Init();
-
+  MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
 
   /* We format the SD card */
@@ -187,10 +221,27 @@ int main(void)
   BSP_SDRAM_Init();
   AI_Init();
 
+  NRF24_begin(GPIOA, CSN_PIN_Pin, CE_PIN_Pin, hspi2);
+  nrf24_DebugUART_Init(huart1);
+
   memset(waveform, 0, sizeof(waveform));
   memset(stereo_waveform, 0, sizeof(stereo_waveform));
   memset(float_waveform, 0, sizeof(float_waveform));
   memset(spectrogram, 0, sizeof(spectrogram));
+
+  // We print some basic info into our serial monitor
+  //printRadioSettings();
+  // Transmit - NO ACK // We transmit info without needing a receptor
+  // Good practice : in case we were in receive mode just before
+  NRF24_stopListening();
+  // We open the writing pipe (hex address)
+  NRF24_openWritingPipe(TxpipeAddrs);
+  // We turn off ack and select a channel 0 - 127
+  NRF24_setAutoAck(false);
+  NRF24_setChannel(52);
+  // We set a payload size of 32 bytes   (max)
+  NRF24_setPayloadSize(32);
+  //HAL_GPIO_TogglePin(Green_LED_GPIO_Port, Green_LED_Pin);
 
   /* USER CODE END 2 */
 
@@ -207,12 +258,6 @@ int main(void)
 
         if (button_pressed == 1)
         {
-            /* Toggle the green led to visually show action */
-            HAL_GPIO_TogglePin(USR_LED_GPIO_Port, USR_LED_Pin);
-            HAL_Delay(100);
-            HAL_GPIO_TogglePin(USR_LED_GPIO_Port, USR_LED_Pin);
-            HAL_Delay(100);
-
             /* If the program is not already recording... */
             if (AudioState == AUDIO_STATE_IDLE)
             {
@@ -388,6 +433,52 @@ int main(void)
 				// Trouver la classe avec la probabilité max
 				uint32_t class_idx = argmax(aiOutData, AI_NETWORK_OUT_1_SIZE);
 				printf("Mot détecté : %s (Confiance : %.2f%%)\r\n", activities[class_idx], aiOutData[class_idx] * 100);
+
+				// Map the detected word to the correct command
+				const char* command_to_send = NULL;
+
+				if (strcmp(activities[class_idx], "down") == 0) {
+				    command_to_send = back;
+				    button_pressed_back = 0;
+				} else if (strcmp(activities[class_idx], "go") == 0) {
+				    command_to_send = go;
+				    button_pressed_go = 0;
+				} else if (strcmp(activities[class_idx], "left") == 0) {
+				    command_to_send = gauche;
+				    button_pressed_left = 0;
+				} else if (strcmp(activities[class_idx], "right") == 0) {
+				    command_to_send = droite;
+				    button_pressed_right = 0;
+				} else if (strcmp(activities[class_idx], "stop") == 0) {
+				    command_to_send = stop;
+				    button_pressed_stop = 0;
+				} else if (strcmp(activities[class_idx], "up") == 0) {
+				    command_to_send = stop;  // Not sure if "up" should also send "Stop"
+				    button_pressed_stop = 0;
+				}
+
+				// Send the mapped command
+				if (command_to_send != NULL) {
+				    HAL_GPIO_send_command(command_to_send);
+				}
+
+//				bool result = NRF24_write((const void*)myTxData, sizeof(myTxData));
+//
+//				if (result) {
+//				    // Transmission successful
+//				    printf("Message sent: %s\r\n", myTxData);
+//				} else {
+//				    // Transmission failed
+//				    printf("Message transmission failed\r\n");
+//
+//				    // Debugging: Check the status and observe_tx
+//				    uint8_t status;
+//				    uint8_t observe_tx;
+//				    NRF24_read_registerN(REG_OBSERVE_TX, &observe_tx, 1);
+//				    status = NRF24_get_status();
+//				    printf("Status Register: 0x%02X\r\n", status);
+//				    printf("TX Observe Register: 0x%02X\r\n", observe_tx);
+				}
         }
 
         HAL_Delay(100);  // Small delay for stability
@@ -395,7 +486,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-}
+
   /* USER CODE END 3 */
 
 
@@ -624,6 +715,57 @@ void softmax(float *values, uint32_t len) {
         values[i] = expf(values[i]);  // Exponentiate each value
         sum += values[i];             // Sum the exponentiated values
     }
+}
+
+void HAL_GPIO_send_command(const char* command) // Fonction de transmission des commandes
+{
+    if (strcmp(command, droite) == 0 && button_pressed_right == 0) {
+        button_pressed_right = 1;
+
+		if (NRF24_write(droite, 32) == 1) {
+			printf("Transmission success: command %s\r\n", command);
+		} else {
+			printf("Transmission failed for command %s\r\n", command);
+		}
+
+    } else if (strcmp(command, gauche) == 0 && button_pressed_left == 0) {
+        button_pressed_left = 1;
+
+        // Send the command using NRF24
+		if (NRF24_write(gauche, 32) == 1) {
+			printf("Transmission success: command %s\r\n", command);
+		} else {
+			printf("Transmission failed for command %s\r\n", command);
+		}
+
+    } else if (strcmp(command, stop) == 0 && button_pressed_stop == 0) {
+        button_pressed_stop = 1;
+
+		if (NRF24_write(stop, 32) == 1) {
+			printf("Transmission success: command %s\r\n", command);
+		} else {
+			printf("Transmission failed for command %s\r\n", command);
+		}
+
+    } else if (strcmp(command, go) == 0 && button_pressed_go == 0) {
+        button_pressed_go = 1;
+
+		if (NRF24_write(go, 32) == 1) {
+			printf("Transmission success: command %s\r\n", command);
+		} else {
+			printf("Transmission failed for command %s\r\n", command);
+		}
+    } else if (strcmp(command, back) == 0 && button_pressed_back == 0) {
+        button_pressed_back = 1;
+		if (NRF24_write(back, 32) == 1) {
+			printf("Transmission success: command %s\r\n", command);
+		} else {
+			printf("Transmission failed for command %s\r\n", command);
+		}
+    } else {
+        return; // Command not recognized, do nothing
+    }
+
 }
 /* USER CODE END 4 */
 
