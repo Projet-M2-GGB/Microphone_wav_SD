@@ -216,6 +216,11 @@ int main(void)
   BSP_SDRAM_Init();
   AI_Init();
 
+  memset(waveform, 0, sizeof(waveform));
+  memset(stereo_waveform, 0, sizeof(stereo_waveform));
+  memset(float_waveform, 0, sizeof(float_waveform));
+  memset(spectrogram, 0, sizeof(spectrogram));
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -392,24 +397,31 @@ int main(void)
 
 				res = f_open(&file, "data.txt", FA_WRITE | FA_CREATE_ALWAYS);
 				if (res == FR_OK) {
-					f_write(&file, "[", 1, &bw);
-					char buffer[32];
+				    f_write(&file, "[\n", 2, &bw);
+				    char buffer[32];
 
-					for (uint32_t i = 0; i < 124; i++) {
-						for (uint32_t j = 0; j < FFT_SIZE / 2 + 1; j++) {
-							sprintf(buffer, "%.6f", spectrogram[i][j]);
-							f_write(&file, buffer, strlen(buffer), &bw);
-							if (i < 123 || j < FFT_SIZE / 2) {
-								f_write(&file, ", ", 2, &bw);
-							}
-						}
-					}
+				    for (uint32_t i = 0; i < 124; i++) {
+				        f_write(&file, " [", 2, &bw);
+				        for (uint32_t j = 0; j < 129; j++) {
+				            sprintf(buffer, "%.8f", spectrogram[i][j]);
+				            f_write(&file, buffer, strlen(buffer), &bw);
 
-					f_write(&file, "]", 2, &bw);
-					f_close(&file);
-					printf("Sauvegarde réussie !\r\n");
+				            if (j < 128) {  // Add space between values but no comma
+				                f_write(&file, " ", 1, &bw);
+				            }
+				        }
+				        f_write(&file, "]", 1, &bw);
+
+				        if (i < 123) { // New line for the next row except the last one
+				            f_write(&file, "\n", 1, &bw);
+				        }
+				    }
+
+				    f_write(&file, "\n]", 2, &bw);
+				    f_close(&file);
+				    printf("Sauvegarde réussie !\r\n");
 				} else {
-					printf("Échec de la sauvegarde du spectrogramme !\r\n");
+				    printf("Échec de la sauvegarde du spectrogramme !\r\n");
 				}
 
 				// -------------------- PRÉPARATION POUR L'IA --------------------
