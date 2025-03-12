@@ -32,13 +32,12 @@
 #include "waverecorder.h"
 #include <stdio.h>
 
-
 #include "ai_datatypes_defines.h"
 #include "ai_platform.h"
 #include "network.h"
 #include "network_data.h"
 
-#include "arm_math.h"  // For DSP functions like FFT
+#include "arm_math.h"
 #include "dsp/transform_functions.h"
 
 /* USER CODE END Includes */
@@ -88,11 +87,11 @@ AUDIO_ErrorTypeDef  status;
 #define WORK_BUFFER_SIZE 512
 BYTE workBuffer_init[WORK_BUFFER_SIZE];
 extern FIL WavFile;
-static AUDIO_OUT_BufferTypeDef BufferCtl;
 FRESULT res;
 UINT bytesRead, bw;
 WAV_Header header;
 FIL file;
+
 /* AI model RELATED VARIABLES */
 ai_handle network;
 float aiInData[AI_NETWORK_IN_1_SIZE];
@@ -105,17 +104,11 @@ ai_buffer * ai_input;
 ai_buffer * ai_output;
 
 /* Audio processing RELATED VARIABLES */
-
 static int16_t stereo_waveform[BUFFER_SIZE*2];
 static int16_t waveform[BUFFER_SIZE] __attribute__((section(".sdram")));
 static float float_waveform[BUFFER_SIZE] __attribute__((section(".sdram")));
 static float spectrogram[124][129] __attribute__((section(".sdram")));
-
-
-static uint16_t last_ffts[125];
-
 const static uint32_t frame_step = 128;
-
 arm_rfft_fast_instance_f32 fft;
 
 /* USER CODE END PV */
@@ -138,24 +131,17 @@ set to 'Yes') calls __io_putchar() */
 
 /* Needed to initialize the SD Card */
 void SDCard_InitAndFormat(void);
-
-/* Needed to create a txt in the SD Card */
-void new_log(FIL *fp, const char *filename, const char *content);
-
-/* Needed to create a folder in the SD Card */
-void new_folder(const char *foldername);
-
-void ReadWAVFileInfo(const char *filename);
-void ReadWAVFileInfo_fromSD(const char *filename);
-
 int read_wav_file(const char *filename, int16_t *buffer);
 
+/* Audio processing */
 void arm_hanning_f32(float32_t * pDst, uint32_t blockSize);
 
+/* AI functions */
 static void AI_Init(void);
 static void AI_Run(float *pIn, float *pOut);
 static uint32_t argmax(const float * values, uint32_t len);
 void softmax(float *values, uint32_t len);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -225,7 +211,6 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  	uint32_t write_index = 0;
     while (1)
     {
         check_button_release();
@@ -263,24 +248,15 @@ int main(void)
                 printf("Recording stopped.\r\n");
             }
 
-            //ReadWAVFileInfo("WAVE.wav");
 
             /* Audio processing step*/
 
-//            // We read the contents of the file, save the info in the "audio_buffer" variable
-//            read_wav_file("WAVE.wav", stereo_waveform);
-//            //Début traitement
-
-				// We read the contents of the file, save the info in the "audio_buffer" variable
-				// Charger le fichier WAV et vérifier mono/stéréo
-				// Charger le fichier WAV et vérifier mono/stéréo
 				if (read_wav_file("WAVE.WAV", stereo_waveform) != 0) {
 					printf("Erreur : Impossible de lire le fichier WAV\r\n");
 					return;
 				}
 
 				// Si le fichier est stéréo, on le convertit en mono en moyennant les canaux
-
 				for (uint32_t i = 0; i < BUFFER_SIZE; i++) {
 					waveform[i] = (stereo_waveform[2 * i] + stereo_waveform[2 * i + 1]) / 2;  // Moyenne des deux canaux
 				}
@@ -361,68 +337,38 @@ int main(void)
 					}
 				}
 
-				// -------------------- NORMALISATION DU SPECTROGRAMME --------------------
+				// -------------------- SAUVEGARDE SUR SD (debug, decommenter si necessaire) --------------------
 
-				printf("Normalisation du spectrogramme...\r\n");
-//				float min_spec = 1e6, max_spec = -1e6;
+//				printf("Sauvegarde du spectrogramme...\r\n");
 //
-//				// Trouver min et max du spectrogramme
-//				for (uint32_t i = 0; i < 124; i++) {
-//					for (uint32_t j = 0; j < FFT_SIZE / 2 + 1; j++) {
-//						if (spectrogram[i][j] < min_spec) min_spec = spectrogram[i][j];
-//						if (spectrogram[i][j] > max_spec) max_spec = spectrogram[i][j];
-//					}
+//				res = f_open(&file, "data.txt", FA_WRITE | FA_CREATE_ALWAYS);
+//				if (res == FR_OK) {
+//				    f_write(&file, "[\n", 2, &bw);
+//				    char buffer[32];
+//
+//				    for (uint32_t i = 0; i < 124; i++) {
+//				        f_write(&file, " [", 2, &bw);
+//				        for (uint32_t j = 0; j < 129; j++) {
+//				            sprintf(buffer, "%.8f", spectrogram[i][j]);
+//				            f_write(&file, buffer, strlen(buffer), &bw);
+//
+//				            if (j < 128) {  // Add space between values but no comma
+//				                f_write(&file, " ", 1, &bw);
+//				            }
+//				        }
+//				        f_write(&file, "]", 1, &bw);
+//
+//				        if (i < 123) { // New line for the next row except the last one
+//				            f_write(&file, "\n", 1, &bw);
+//				        }
+//				    }
+//
+//				    f_write(&file, "\n]", 2, &bw);
+//				    f_close(&file);
+//				    printf("Sauvegarde réussie !\r\n");
+//				} else {
+//				    printf("Échec de la sauvegarde du spectrogramme !\r\n");
 //				}
-//
-//				float spec_range = max_spec - min_spec;
-//				if (spec_range == 0) spec_range = 1.0f;
-//
-//				// Appliquer la normalisation
-//				for (uint32_t i = 0; i < 124; i++) {
-//					for (uint32_t j = 0; j < FFT_SIZE / 2 + 1; j++) {
-//						spectrogram[i][j] = (spectrogram[i][j] - min_spec) / spec_range;
-//					}
-//				}
-
-				// Vérification des valeurs normalisées
-				printf("Premières valeurs normalisées du spectrogramme : ");
-				for (uint32_t i = 0; i < 10; i++) {
-					printf("%.6f ", spectrogram[0][i]);
-				}
-				printf("\r\n");
-
-				// -------------------- SAUVEGARDE SUR SD --------------------
-
-				printf("Sauvegarde du spectrogramme...\r\n");
-
-				res = f_open(&file, "data.txt", FA_WRITE | FA_CREATE_ALWAYS);
-				if (res == FR_OK) {
-				    f_write(&file, "[\n", 2, &bw);
-				    char buffer[32];
-
-				    for (uint32_t i = 0; i < 124; i++) {
-				        f_write(&file, " [", 2, &bw);
-				        for (uint32_t j = 0; j < 129; j++) {
-				            sprintf(buffer, "%.8f", spectrogram[i][j]);
-				            f_write(&file, buffer, strlen(buffer), &bw);
-
-				            if (j < 128) {  // Add space between values but no comma
-				                f_write(&file, " ", 1, &bw);
-				            }
-				        }
-				        f_write(&file, "]", 1, &bw);
-
-				        if (i < 123) { // New line for the next row except the last one
-				            f_write(&file, "\n", 1, &bw);
-				        }
-				    }
-
-				    f_write(&file, "\n]", 2, &bw);
-				    f_close(&file);
-				    printf("Sauvegarde réussie !\r\n");
-				} else {
-				    printf("Échec de la sauvegarde du spectrogramme !\r\n");
-				}
 
 				// -------------------- PRÉPARATION POUR L'IA --------------------
 
@@ -587,148 +533,9 @@ void SDCard_InitAndFormat(void) {
 }
 /* ======================================================== */
 
-
-/* Used to create a new txt file */
-void new_log(FIL *fp, const char *filename, const char *content){
-	FRESULT res;
-	uint32_t byteswritten;
-	if(f_open(fp, filename, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
-	{
-		Error_Handler();
-	}
-	else
-	{
-		res = f_write(fp, content, strlen(content), (void *)&byteswritten);
-
-		if((byteswritten == 0) || (res != FR_OK))
-		{
-			Error_Handler();
-		}
-		else
-		{
-			f_close(fp);
-		}
-	}
-}
-/* ======================================================== */
-
-
-/* Used to create a new folder */
-void new_folder(const char *foldername){
-	if(f_mkdir(foldername) != FR_OK)
-	{
-		Error_Handler();
-	}
-	else
-	{
-		printf("Folder created!\r\n");
-	}
-}
-/* ======================================================== */
-
-
-/* Debug function : reads the characteristics of a .wav file in the SD card */
-void ReadWAVFileInfo_fromSD(const char *filename) {
-    FIL file;               // File object
-    WAV_Header header;      // WAV file header
-    UINT bytesRead;         // Number of bytes read
-    FRESULT res;
-
-    res = f_mount(&SDFatFS, (TCHAR const *)SDPath, 0);
-    if (res != FR_OK) {
-        printf("Error: Failed to mount SD card (Code: %d).\r\n", res);
-        Error_Handler();
-    }
-
-    // Open the WAV file
-    res = f_open(&file, filename, FA_READ);
-    if (res != FR_OK) {
-        printf("Error: Failed to open file '%s' (Code: %d).\n", filename, res);
-        return;
-    }
-
-    // Read the WAV file header
-    res = f_read(&file, &header, sizeof(WAV_Header), &bytesRead);
-    if (res != FR_OK || bytesRead != sizeof(WAV_Header)) {
-        printf("Error: Failed to read WAV file header (Code: %d).\n", res);
-        f_close(&file);
-        return;
-    }
-
-    // Print WAV file information
-    printf("WAV File Info:\r\n");
-    printf("  ChunkID: %.4s\r\n", header.ChunkID);
-    printf("  Format: %.4s\r\n", header.Format);
-    printf("  Audio Format: %d\r\n", header.AudioFormat);
-    printf("  Number of Channels: %d\r\n", header.NumChannels);
-    printf("  Sample Rate: %d Hz\r\n", header.SampleRate);
-    printf("  Byte Rate: %d\r\n", header.ByteRate);
-    printf("  Block Align: %d\r\n", header.BlockAlign);
-    printf("  Bits Per Sample: %d\r\n", header.BitsPerSample);
-    printf("  Subchunk2ID: %.4s\r\n", header.Subchunk2ID);
-    printf("  Subchunk2Size: %d bytes\r\n", header.Subchunk2Size);
-
-    // Close the file
-    f_close(&file);
-}
-/* ======================================================== */
-
-
-/* Debug function : reads the characteristics of a .wav file in the SD card */
-void ReadWAVFileInfo(const char *filename) {
-    FIL file;               // File object
-    WAV_Header header;      // WAV file header
-    UINT bytesRead;         // Number of bytes read
-    FRESULT res;
-
-    SCB_DisableDCache();
-    SCB_DisableICache();
-
-    // Open the WAV file
-    res = f_open(&file, filename, FA_READ);
-    if (res != FR_OK) {
-        printf("Error: Failed to open file '%s' (Code: %d).\n", filename, res);
-        return;
-    }
-
-    // Read the WAV file header
-    res = f_read(&file, &header, sizeof(WAV_Header), &bytesRead);
-    if (res != FR_OK || bytesRead != sizeof(WAV_Header)) {
-        printf("Error: Failed to read WAV file header (Code: %d).\n", res);
-        f_close(&file);
-        return;
-    }
-
-    // Print WAV file information
-    printf("WAV File Info:\r\n");
-    printf("  ChunkID: %.4s\r\n", header.ChunkID);
-    printf("  Format: %.4s\r\n", header.Format);
-    printf("  Audio Format: %d\r\n", header.AudioFormat);
-    printf("  Number of Channels: %d\r\n", header.NumChannels);
-    printf("  Sample Rate: %d Hz\r\n", header.SampleRate);
-    printf("  Byte Rate: %d\r\n", header.ByteRate);
-    printf("  Block Align: %d\r\n", header.BlockAlign);
-    printf("  Bits Per Sample: %d\r\n", header.BitsPerSample);
-    printf("  Subchunk2ID: %.4s\r\n", header.Subchunk2ID);
-    printf("  Subchunk2Size: %d bytes\r\n", header.Subchunk2Size);
-
-//    SCB_EnableDCache();
-//    SCB_EnableICache();
-
-    // Close the file
-    f_close(&file);
-}
-/* ======================================================== */
-
 int read_wav_file(const char *filename, int16_t *buffer) {
     FIL file;
     UINT bytes_read;
-
-//    FRESULT res = f_mount(&SDFatFS, (TCHAR const *)SDPath, 0);
-//    if (res != FR_OK) {
-//        printf("Error: Failed to mount SD card (Code: %d).\r\n", res);
-//        Error_Handler();
-//    }
 
     FRESULT result = f_open(&file, filename, FA_READ);
 
@@ -832,11 +639,6 @@ void softmax(float *values, uint32_t len) {
         values[i] = expf(values[i]);  // Exponentiate each value
         sum += values[i];             // Sum the exponentiated values
     }
-
-//    // Normalize by dividing each value by the sum to get probabilities
-//    for (uint32_t i = 0; i < len; i++) {
-//        values[i] /= sum;
-//    }
 }
 /* USER CODE END 4 */
 
