@@ -198,13 +198,13 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_SAI1_Init();
-  MX_USART1_UART_Init();
-  MX_FATFS_Init();
   MX_SDMMC1_SD_Init();
-  MX_CRC_Init();
   MX_FMC_Init();
+  MX_SAI1_Init();
   MX_SPI2_Init();
+  MX_USART1_UART_Init();
+  MX_CRC_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
   /* Init */
@@ -457,13 +457,13 @@ int main(void)
         }
 
         HAL_Delay(100);  // Small delay for stability
-  }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
   /* USER CODE END 3 */
-
+}
 
 /**
   * @brief System Clock Configuration
